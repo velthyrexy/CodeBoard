@@ -3,26 +3,82 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="#050505"
+    android:padding="6dp">
 
+    <!-- Öneri Çubuğu (Suggestions) -->
     <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:scrollbars="none">
+        android:layout_height="38dp"
+        android:scrollbars="none"
+        android:layout_marginBottom="6dp">
 
         <LinearLayout
             android:id="@+id/suggestion_container"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:padding="4dp" />
+            android:orientation="horizontal" />
     </HorizontalScrollView>
 
+    <!-- Metin Önizleme Kutusu (pro|) -->
+    <TextView
+        android:id="@+id/tv_preview_text"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp" />
+
+    <!-- Klavye Tuş Konteynırı -->
     <LinearLayout
         android:id="@+id/keys_container"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:orientation="vertical"
-        android:padding="4dp" />
+        android:layout_height="200dp"
+        android:orientation="vertical" />
+
+    <!-- Alt Durum Çubuğu (Dil & İkonlar) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:id="@+id/btn_globe_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="🌐"
+            android:textColor="#FFD700"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_current_lang"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="Luau ∨"
+            android:textColor="#FFD700"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_dismiss_keyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="⌨"
+            android:textColor="#FFD700"
+            android:textSize="16sp" />
+    </RelativeLayout>
 
 </LinearLayout>
