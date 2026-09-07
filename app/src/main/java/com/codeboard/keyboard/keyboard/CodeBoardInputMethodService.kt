@@ -31,7 +31,7 @@ class CodeBoardInputMethodService : InputMethodService() {
     private var isShifted = false
     private var isSymbolMode = false
 
-    // DEL basılı tutma mekanizması
+    // DEL hold-to-delete mechanism
     private val deleteHandler = Handler(Looper.getMainLooper())
     private var isDeleting = false
     private val deleteRunnable = object : Runnable {
@@ -237,9 +237,9 @@ class CodeBoardInputMethodService : InputMethodService() {
     private fun updateSuggestions(prefix: String) {
         suggestionContainer.removeAllViews()
 
-        // Pano (Clipboard) Butonu
+        // Clipboard Button
         val pasteBtn = Button(this).apply {
-            text = "📋 Yapıştır"
+            text = "📋 Paste"
             setTextColor(Color.BLACK)
             background = createButtonDrawable(isSelected = true)
             textSize = 11f
@@ -283,7 +283,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 return
             }
         }
-        Toast.makeText(this, "Pano boş!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Clipboard is empty!", Toast.LENGTH_SHORT).show()
     }
 
     private fun applySuggestion(suggestionText: String) {
