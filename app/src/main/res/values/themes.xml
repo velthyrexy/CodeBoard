@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CodeBoard" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/codeboard_yellow</item>
+        <item name="colorPrimaryDark">@color/codeboard_black</item>
+        <item name="colorAccent">@color/codeboard_yellow</item>
+        <item name="android:windowBackground">@color/codeboard_black</item>
+    </style>
+</resources>
