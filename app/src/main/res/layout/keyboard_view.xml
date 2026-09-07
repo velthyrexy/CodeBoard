@@ -6,33 +6,102 @@
     android:background="#050505"
     android:padding="6dp">
 
-    <!-- Öneri Çubuğu (Suggestions) -->
-    <HorizontalScrollView
+    <!-- Üst Bar: Öneriler & 🤖 AI Chat Butonu -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="38dp"
-        android:scrollbars="none"
+        android:orientation="horizontal"
         android:layout_marginBottom="6dp">
 
-        <LinearLayout
-            android:id="@+id/suggestion_container"
+        <Button
+            android:id="@+id/btn_toggle_ai"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
+            android:text="🤖 AI Chat"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:textAllCaps="false"
+            android:background="@android:color/transparent" />
 
-    <!-- Metin Önizleme Kutusu (pro|) -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/suggestion_container"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Mini AI Chat Panel (Açılır/Kapanır) -->
+    <LinearLayout
+        android:id="@+id/ai_chat_panel"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:padding="4dp"
+        android:layout_marginBottom="6dp">
+
+        <ScrollView
+            android:id="@+id/chat_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/chat_messages_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <EditText
+                android:id="@+id/et_ai_input"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Ask AI or request code..."
+                android:textColorHint="#777777"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:background="#1A1A1A" />
+
+            <Button
+                android:id="@+id/btn_send_ai"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Send"
+                android:textColor="#000000"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Metin Önizleme Kutusu -->
     <TextView
         android:id="@+id/tv_preview_text"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
         android:textColor="#FFFFFF"
-        android:textSize="17sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:textSize="15sp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
         android:gravity="center_vertical"
         android:layout_marginBottom="6dp" />
 
-    <!-- Klavye Tuş Konteynırı -->
+    <!-- Klavye Tuşları -->
     <LinearLayout
         android:id="@+id/keys_container"
         android:layout_width="match_parent"
