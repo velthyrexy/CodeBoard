@@ -3,30 +3,26 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/codeboard_black">
+    android:background="#121212">
 
-    <!-- 4 Code Suggestions Container -->
-    <LinearLayout
-        android:id="@+id/suggestion_container"
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:weightSum="4"
-        android:background="@color/codeboard_dark_gray">
-    </LinearLayout>
+        android:layout_height="45dp"
+        android:scrollbars="none">
 
-    <!-- Yellow Separator Line -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="@color/codeboard_yellow"/>
+        <LinearLayout
+            android:id="@+id/suggestion_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:padding="4dp" />
+    </HorizontalScrollView>
 
-    <!-- Key Container -->
     <LinearLayout
         android:id="@+id/keys_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="220dp"
         android:orientation="vertical"
-        android:padding="4dp">
-    </LinearLayout>
+        android:padding="4dp" />
+
 </LinearLayout>
