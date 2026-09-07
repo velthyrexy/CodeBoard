@@ -2,35 +2,63 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#121212"
+    android:gravity="center"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center">
-
-    <Button
-        android:id="@+id/btn_enable_keyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="1. Enable Keyboard"
-        android:layout_marginBottom="16dp" />
-
-    <Button
-        android:id="@+id/btn_select_keyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2. Select CodeBoard Keyboard"
-        android:layout_marginBottom="32dp" />
+    android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Select Coding Language:"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="32dp"
+        android:text="CodeBoard"
+        android:textColor="#FFD700"
+        android:textSize="32sp"
+        android:textStyle="bold" />
 
-    <Spinner
-        android:id="@+id/spinner_language"
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_enable_keyboard"
         android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        android:layout_height="56dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/btn_rounded_yellow"
+        android:text="1. Enable Keyboard in Settings"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_select_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/btn_rounded_yellow"
+        android:text="2. Select CodeBoard"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Select Coding Language"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/btn_rounded_yellow">
+
+        <Spinner
+            android:id="@+id/spinner_language"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
+    </FrameLayout>
 
 </LinearLayout>
