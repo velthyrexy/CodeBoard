@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/codeboard_black">
+
+    <!-- 4 Code Suggestions Container -->
+    <LinearLayout
+        android:id="@+id/suggestion_container"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:weightSum="4"
+        android:background="@color/codeboard_dark_gray">
+    </LinearLayout>
+
+    <!-- Yellow Separator Line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/codeboard_yellow"/>
+
+    <!-- Key Container -->
+    <LinearLayout
+        android:id="@+id/keys_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="4dp">
+    </LinearLayout>
+</LinearLayout>
