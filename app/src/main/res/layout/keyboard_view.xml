@@ -39,46 +39,4 @@
         android:layout_height="200dp"
         android:orientation="vertical" />
 
-    <!-- Alt Durum Çubuğu (Dil & İkonlar) -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:layout_marginTop="4dp">
-
-        <TextView
-            android:id="@+id/btn_globe_bottom"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="🌐"
-            android:textColor="#FFD700"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/tv_current_lang"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:gravity="center"
-            android:text="Luau ∨"
-            android:textColor="#FFD700"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/btn_dismiss_keyboard"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="⌨"
-            android:textColor="#FFD700"
-            android:textSize="16sp" />
-    </RelativeLayout>
-
 </LinearLayout>
