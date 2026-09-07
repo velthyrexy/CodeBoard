@@ -1,5 +1,6 @@
 package com.codeboard.keyboard.keyboard
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
@@ -29,104 +30,57 @@ class CodeBoardInputMethodService : InputMethodService() {
     private lateinit var keysContainer: LinearLayout
 
     private var currentMode = KeyboardViewMode.CODE_PALETTE
-    private var selectedLanguage = "Python"
+    private var selectedLanguage = "Luau"
     private var selectedCategoryIndex = 0
 
-    // Complete multi-language database (All titles & UI in English)
+    // Database including Luau (Roblox) and standard languages
     private val languageDatabase = mapOf(
+        "Luau" to listOf(
+            CodeCategory("Roblox Basics", listOf("local ", "function ", "game:GetService(\"", "Instance.new(\"", "workspace.", "script.Parent", "task.wait(", "task.spawn(", "warn(", "print(")),
+            CodeCategory("Control & Flow", listOf("if ", "then", "else", "elseif ", "end", "for ", "in ", "pairs(", "ipairs(", "while ", "do", "repeat", "until ", "break", "return ")),
+            CodeCategory("Data & Math", listOf("Vector3.new(", "CFrame.new(", "Color3.fromRGB(", "UDim2.new(", "BrickColor.new(", "math.clamp(", "math.rad(", "math.random(")),
+            CodeCategory("Events & OOP", listOf(":Connect(function(", ":Destroy()", ":Clone()", ":WaitForChild(\"", ":FindFirstChild(\"", ":GetChildren()", "setmetatable(")),
+            CodeCategory("Snippets", listOf("local Players = game:GetService(\"Players\")\n", "script.Parent.Touched:Connect(function(hit)\n    \nend)", "task.spawn(function()\n    \nend)"))
+        ),
         "Python" to listOf(
-            CodeCategory("Keywords", listOf("def ", "class ", "return ", "import ", "from ", "as ", "pass", "lambda ", "global ", "nonlocal ", "yield ", "with ", "raise ", "assert ", "del ")),
-            CodeCategory("Control Flow", listOf("if ", "elif ", "else:", "for ", "in ", "while ", "break", "continue", "try:", "except ", "finally:")),
-            CodeCategory("Types & Values", listOf("True", "False", "None", "and ", "or ", "not ", "is ", "in ")),
-            CodeCategory("Built-ins", listOf("print(", "len(", "range(", "type(", "int(", "str(", "float(", "list(", "dict(", "set(", "tuple(", "enumerate(", "zip(", "map(", "filter(", "input(", "sum(", "min(", "max(", "sorted(")),
-            CodeCategory("Methods", listOf(".append(", ".extend(", ".pop(", ".split(", ".replace(", ".join(", ".strip(", ".format(", ".get(", ".keys()", ".values()", ".items()")),
-            CodeCategory("Snippets", listOf("if __name__ == '__main__':\n    ", "def __init__(self, ", "try:\n    pass\nexcept Exception as e:\n    pass", "with open('', 'r') as f:\n    "))
+            CodeCategory("Keywords", listOf("def ", "class ", "return ", "import ", "from ", "as ", "pass", "lambda ", "global ", "yield ", "with ")),
+            CodeCategory("Control Flow", listOf("if ", "elif ", "else:", "for ", "in ", "while ", "break", "continue", "try:", "except ")),
+            CodeCategory("Built-ins", listOf("print(", "len(", "range(", "type(", "int(", "str(", "float(", "list(", "dict(", "set(", "enumerate(")),
+            CodeCategory("Methods", listOf(".append(", ".extend(", ".pop(", ".split(", ".replace(", ".join(", ".strip(", ".get("))
         ),
         "JavaScript" to listOf(
-            CodeCategory("Declarations", listOf("const ", "let ", "var ", "function ", "=> ", "class ", "extends ", "constructor", "this.", "super(")),
-            CodeCategory("Control Flow", listOf("if ", "else ", "switch ", "case ", "default:", "for ", "while ", "do ", "break", "continue", "try ", "catch ", "finally ", "throw ")),
-            CodeCategory("Async & Modules", listOf("async ", "await ", "Promise", "import ", "export ", "export default ", "require(", "module.exports")),
-            CodeCategory("DOM & Console", listOf("console.log(", "console.error(", "document.getElementById(", "document.querySelector(", "document.querySelectorAll(", "addEventListener(")),
-            CodeCategory("Array & Object", listOf(".map(", ".filter(", ".reduce(", ".forEach(", ".find(", ".includes(", ".push(", ".slice(", "Object.keys(", "Object.values(", "JSON.stringify(", "JSON.parse(")),
-            CodeCategory("Snippets", listOf("const fetchData = async () => {\n  try {\n    \n  } catch (err) {}\n}", "setTimeout(() => {\n  \n}, 1000);"))
+            CodeCategory("Declarations", listOf("const ", "let ", "var ", "function ", "=> ", "class ", "extends ", "this.")),
+            CodeCategory("Control Flow", listOf("if ", "else ", "switch ", "case ", "for ", "while ", "try ", "catch ")),
+            CodeCategory("DOM & Console", listOf("console.log(", "document.getElementById(", "document.querySelector(", "addEventListener(")),
+            CodeCategory("Array & Object", listOf(".map(", ".filter(", ".reduce(", ".forEach(", "JSON.stringify(", "JSON.parse("))
         ),
         "TypeScript" to listOf(
-            CodeCategory("Type Defs", listOf("type ", "interface ", "enum ", "as ", "keyof ", "typeof ", "unknown", "never", "any", "void", "string", "number", "boolean")),
-            CodeCategory("Generics & Access", listOf("readonly ", "private ", "public ", "protected ", "abstract ", "<T>", "Record<", "Partial<", "Omit<", "Pick<")),
-            CodeCategory("Snippets", listOf("interface Props {\n  \n}", "type Response<T> = {\n  data: T;\n};"))
+            CodeCategory("Type Defs", listOf("type ", "interface ", "enum ", "as ", "keyof ", "typeof ", "unknown", "never")),
+            CodeCategory("Generics", listOf("readonly ", "private ", "public ", "protected ", "<T>", "Record<", "Partial<"))
         ),
         "Kotlin" to listOf(
-            CodeCategory("Declarations", listOf("val ", "var ", "fun ", "class ", "data class ", "object ", "interface ", "enum class ", "typealias ")),
-            CodeCategory("Modifiers", listOf("private ", "protected ", "public ", "internal ", "override ", "open ", "abstract ", "sealed ", "companion object")),
-            CodeCategory("Control & Null", listOf("when ", "if ", "else ", "for ", "while ", "try ", "catch ", "?:", "!!", "as?", "is ", "!is ")),
-            CodeCategory("Collections", listOf("listOf(", "mutableListOf(", "mapOf(", "mutableMapOf(", "setOf(", ".forEach { ", ".map { ", ".filter { ", ".let { ", ".apply { ", ".also { ")),
-            CodeCategory("Coroutines", listOf("suspend ", "launch ", "async ", "Dispatchers.IO", "Dispatchers.Main", "Flow<", "StateFlow<")),
-            CodeCategory("Snippets", listOf("companion object {\n    \n}", "data class Model(\n    val id: String\n)"))
-        ),
-        "Java" to listOf(
-            CodeCategory("Modifiers", listOf("public ", "private ", "protected ", "static ", "final ", "abstract ", "class ", "interface ", "extends ", "implements ")),
-            CodeCategory("Data Types", listOf("int ", "long ", "double ", "float ", "boolean ", "char ", "String ", "void ", "byte[] ")),
-            CodeCategory("Control & IO", listOf("if ", "else ", "switch ", "case ", "for ", "while ", "try ", "catch ", "finally ", "throw ", "System.out.println(")),
-            CodeCategory("Collections", listOf("List<", "ArrayList<>", "Map<", "HashMap<>", "Set<", "HashSet<>", ".add(", ".get(", ".size()")),
-            CodeCategory("Snippets", listOf("public static void main(String[] args) {\n    \n}", "public class Main {\n    \n}"))
+            CodeCategory("Declarations", listOf("val ", "var ", "fun ", "class ", "data class ", "object ", "interface ")),
+            CodeCategory("Control & Null", listOf("when ", "if ", "else ", "for ", "while ", "try ", "catch ", "?:", "!!")),
+            CodeCategory("Collections", listOf("listOf(", "mutableListOf(", "mapOf(", ".forEach { ", ".map { ", ".filter { "))
         ),
         "C++" to listOf(
-            CodeCategory("Data Types", listOf("int ", "double ", "float ", "char ", "bool ", "auto ", "void ", "long ", "unsigned ", "const ")),
-            CodeCategory("Standard Lib", listOf("std::cout << ", "std::cin >> ", "std::endl", "std::string", "std::vector<", "std::map<", "std::pair<")),
-            CodeCategory("Pointers & Memory", listOf("new ", "delete ", "nullptr", "sizeof(", "&", "*", "unique_ptr<", "shared_ptr<")),
-            CodeCategory("Preprocessor", listOf("#include <iostream>", "#include <vector>", "#include <string>", "#define ", "#ifdef ", "#endif")),
-            CodeCategory("Snippets", listOf("#include <iostream>\nusing namespace std;\n\nint main() {\n    return 0;\n}"))
+            CodeCategory("Types & Lib", listOf("int ", "double ", "float ", "bool ", "auto ", "void ", "std::cout << ", "std::vector<")),
+            CodeCategory("Pointers", listOf("new ", "delete ", "nullptr", "sizeof(", "&", "*", "unique_ptr<"))
         ),
         "C#" to listOf(
-            CodeCategory("Declarations", listOf("public ", "private ", "protected ", "internal ", "static ", "class ", "struct ", "interface ", "namespace ", "using ")),
-            CodeCategory("LINQ & Types", listOf("var ", "async ", "await ", "Task<", "List<", "Dictionary<", ".Where(", ".Select(", ".FirstOrDefault(")),
-            CodeCategory("Control & IO", listOf("if ", "else ", "switch ", "case ", "foreach ", "while ", "try ", "catch ", "Console.WriteLine(")),
-            CodeCategory("Snippets", listOf("using System;\n\nnamespace App {\n    class Program {\n        static void Main() {\n            \n        }\n    }\n}"))
-        ),
-        "Go" to listOf(
-            CodeCategory("Keywords", listOf("func ", "package ", "import ", "type ", "struct ", "interface ", "var ", "const ", "return ", "defer ")),
-            CodeCategory("Control & Types", listOf("if ", "else ", "for ", "range ", "switch ", "case ", "select ", "int", "string", "bool", "byte", "error")),
-            CodeCategory("Concurrency", listOf("go ", "chan ", "make(", "append(", "len(", "cap(")),
-            CodeCategory("Snippets", listOf("package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello\")\n}"))
-        ),
-        "Rust" to listOf(
-            CodeCategory("Declarations", listOf("fn ", "let ", "mut ", "const ", "struct ", "enum ", "trait ", "impl ", "pub ", "use ", "mod ")),
-            CodeCategory("Control & Types", listOf("match ", "if ", "else ", "loop ", "while ", "for ", "in ", "Option<", "Result<", "Some(", "None", "Ok(", "Err(")),
-            CodeCategory("Macros & Std", listOf("println!(", "format!(", "vec![", "panic!(", "String::from(", ".unwrap()", ".expect(")),
-            CodeCategory("Snippets", listOf("fn main() {\n    println!(\"Hello, world!\");\n}"))
-        ),
-        "Swift" to listOf(
-            CodeCategory("Declarations", listOf("func ", "var ", "let ", "class ", "struct ", "enum ", "protocol ", "extension ", "import ")),
-            CodeCategory("Control & Guard", listOf("if ", "else ", "guard ", "switch ", "case ", "for ", "in ", "while ", "repeat ", "defer ")),
-            CodeCategory("Optionals & Types", listOf("Int", "String", "Double", "Bool", "Any", "nil", "if let ", "guard let ")),
-            CodeCategory("Snippets", listOf("import Foundation\n\nstruct User {\n    let id: String\n}"))
-        ),
-        "PHP" to listOf(
-            CodeCategory("Keywords", listOf("function ", "class ", "public ", "private ", "protected ", "return ", "use ", "namespace ", "echo ")),
-            CodeCategory("Control Flow", listOf("if ", "else ", "elseif ", "foreach ", "while ", "switch ", "try ", "catch ")),
-            CodeCategory("Built-ins", listOf("array(", "count(", "explode(", "implode(", "isset(", "empty(", "header(")),
-            CodeCategory("Snippets", listOf("<?php\n\nnamespace App;\n\nclass Controller {\n    \n}"))
+            CodeCategory("Declarations", listOf("public ", "private ", "static ", "class ", "using ", "var ", "async ", "await ")),
+            CodeCategory("Control & IO", listOf("if ", "else ", "foreach ", "while ", "try ", "catch ", "Console.WriteLine("))
         ),
         "HTML" to listOf(
-            CodeCategory("Elements", listOf("<div>", "</div>", "<span>", "</span>", "<p>", "</p>", "<a href=\"\">", "<img src=\"\">", "<ul>", "<li>", "<table>", "<tr>", "<td>")),
-            CodeCategory("Forms & Struct", listOf("<form>", "<input type=\"text\"", "<button>", "<select>", "<option>", "<header>", "<footer>", "<section>", "<nav>")),
-            CodeCategory("Head & Meta", listOf("<!DOCTYPE html>", "<html>", "<head>", "<meta charset=\"UTF-8\">", "<title>", "<link rel=\"stylesheet\" href=\"\">"))
+            CodeCategory("Elements", listOf("<div>", "</div>", "<span>", "</span>", "<p>", "</p>", "<a href=\"\">", "<img src=\"\">")),
+            CodeCategory("Forms", listOf("<form>", "<input type=\"text\"", "<button>", "<select>", "<option>"))
         ),
         "CSS" to listOf(
-            CodeCategory("Layout & Flex", listOf("display: flex;", "display: grid;", "position: absolute;", "position: relative;", "justify-content: center;", "align-items: center;")),
-            CodeCategory("Box Model", listOf("width: ", "height: ", "margin: ", "padding: ", "border: ", "box-sizing: border-box;")),
-            CodeCategory("Typography & Color", listOf("color: ", "background-color: ", "font-size: ", "font-weight: bold;", "text-align: center;"))
+            CodeCategory("Layout", listOf("display: flex;", "display: grid;", "position: absolute;", "justify-content: center;")),
+            CodeCategory("Box & Style", listOf("width: ", "height: ", "margin: ", "padding: ", "color: ", "background-color: "))
         ),
         "SQL" to listOf(
-            CodeCategory("Queries", listOf("SELECT ", "FROM ", "WHERE ", "INSERT INTO ", "UPDATE ", "DELETE ", "CREATE TABLE ", "ALTER TABLE ", "DROP TABLE ")),
-            CodeCategory("Clauses & Joins", listOf("JOIN ", "LEFT JOIN ", "INNER JOIN ", "ON ", "GROUP BY ", "ORDER BY ", "HAVING ", "LIMIT ", "AND ", "OR ", "NOT ", "IN ")),
-            CodeCategory("Aggregates", listOf("COUNT(", "SUM(", "AVG(", "MAX(", "MIN(", "DISTINCT ", "COALESCE("))
-        ),
-        "Bash" to listOf(
-            CodeCategory("Commands", listOf("echo ", "cd ", "ls -la", "mkdir ", "rm -rf ", "cp ", "mv ", "grep ", "find ", "chmod +x ")),
-            CodeCategory("Control Flow", listOf("if [ ]; then", "else", "fi", "for in; do", "done", "while; do", "case in")),
-            CodeCategory("Variables & Env", listOf("$1", "$@", "$?", "export ", "source ", "alias ", "PATH=")),
-            CodeCategory("Snippets", listOf("#!/bin/bash\n\nset -e\n\necho \"Starting process...\""))
+            CodeCategory("Queries", listOf("SELECT ", "FROM ", "WHERE ", "INSERT INTO ", "UPDATE ", "DELETE ", "JOIN ", "GROUP BY "))
         )
     )
 
@@ -135,50 +89,81 @@ class CodeBoardInputMethodService : InputMethodService() {
         suggestionContainer = keyboardView.findViewById(R.id.suggestion_container)
         keysContainer = keyboardView.findViewById(R.id.keys_container)
 
+        loadSelectedLanguageFromApp()
         renderUI()
         return keyboardView
     }
 
-    private fun renderUI() {
-        keysContainer.removeAllViews()
+    override fun onStartInput(attribute: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInput(attribute, restarting)
+        loadSelectedLanguageFromApp()
+        updateLiveSuggestions()
+    }
+
+    override fun onUpdateSelection(
+        oldSelStart: Int, oldSelEnd: Int,
+        newSelStart: Int, newSelEnd: Int,
+        candidatesStart: Int, candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        updateLiveSuggestions()
+    }
+
+    // Uygulamanın 'Select Language' menüsünden kaydedilen dili okur
+    private fun loadSelectedLanguageFromApp() {
+        val prefs = getSharedPreferences("CodeBoardPrefs", Context.MODE_PRIVATE)
+        val savedLang = prefs.getString("SELECTED_LANGUAGE", "Luau") ?: "Luau"
+        if (languageDatabase.containsKey(savedLang)) {
+            selectedLanguage = savedLang
+        }
+    }
+
+    // Canlı Öneriler Çubuğu (Yazılan kelimeye göre anlık filtreler)
+    private fun updateLiveSuggestions() {
+        val ic = currentInputConnection ?: return
+        val textBefore = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
+        val lastWord = textBefore.substringAfterLast(" ").substringAfterLast("\n")
+
         suggestionContainer.removeAllViews()
 
-        when (currentMode) {
-            KeyboardViewMode.QWERTY -> buildQwertyLayout()
-            KeyboardViewMode.SYMBOLS -> buildSymbolsLayout()
-            KeyboardViewMode.CODE_PALETTE -> renderCodePalette()
+        if (lastWord.isEmpty()) {
+            renderLanguageBarInSuggestions()
+            return
         }
-    }
 
-    // --- 1. QWERTY KEYBOARD ---
-    private fun buildQwertyLayout() {
-        val rows = listOf(
-            listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
-            listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
-            listOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL"),
-            listOf("SYM", "CODE", "TAB", "SPACE", "->", "ENTER")
-        )
-        renderStandardRows(rows)
-    }
+        val allElements = languageDatabase[selectedLanguage]?.flatMap { it.elements } ?: emptyList()
+        val matches = allElements.filter { it.trim().startsWith(lastWord, ignoreCase = true) }.distinct()
 
-    // --- 2. SYMBOLS KEYBOARD ---
-    private fun buildSymbolsLayout() {
-        val rows = listOf(
-            listOf("{", "}", "[", "]", "(", ")", "<", ">", ";", ":"),
-            listOf("=", "+", "-", "*", "/", "\\", "|", "&", "^", "%"),
-            listOf("$", "#", "@", "!", "?", "~", "_", "\"", "'", "`"),
-            listOf("==", "!=", "->", "=>", "&&", "||", "++", "--", "+=", "-="),
-            listOf("ABC", "CODE", "TAB", "SPACE", "DEL", "ENTER")
-        )
-        renderStandardRows(rows)
-    }
-
-    // --- 3. CODE PALETTE MODE ---
-    private fun renderCodePalette() {
-        // Top Header: Horizontal Language Selector Bar
-        val langScrollView = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
+        if (matches.isEmpty()) {
+            renderLanguageBarInSuggestions()
+            return
         }
+
+        val suggestionScrollView = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val suggestionLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+
+        matches.take(10).forEach { suggestion ->
+            val btn = Button(this).apply {
+                text = suggestion.trim()
+                setTextColor(Color.BLACK)
+                background = createDrawable("#00E676", "#00C853")
+                textSize = 12f
+                isAllCaps = false
+                setOnClickListener {
+                    ic.deleteSurroundingText(lastWord.length, 0)
+                    ic.commitText(suggestion, 1)
+                    updateLiveSuggestions()
+                }
+            }
+            suggestionLayout.addView(btn)
+        }
+        suggestionScrollView.addView(suggestionLayout)
+        suggestionContainer.addView(suggestionScrollView)
+    }
+
+    private fun renderLanguageBarInSuggestions() {
+        suggestionContainer.removeAllViews()
+        val langScrollView = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val langLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
 
         languageDatabase.keys.forEach { lang ->
@@ -192,6 +177,11 @@ class CodeBoardInputMethodService : InputMethodService() {
                 setOnClickListener {
                     selectedLanguage = lang
                     selectedCategoryIndex = 0
+                    
+                    // Tercihi hafızaya yaz
+                    getSharedPreferences("CodeBoardPrefs", Context.MODE_PRIVATE)
+                        .edit().putString("SELECTED_LANGUAGE", lang).apply()
+
                     renderUI()
                 }
             }
@@ -199,12 +189,43 @@ class CodeBoardInputMethodService : InputMethodService() {
         }
         langScrollView.addView(langLayout)
         suggestionContainer.addView(langScrollView)
+    }
 
-        // Middle Section: Category Selector Bar
-        val categories = languageDatabase[selectedLanguage] ?: return
-        val catScrollView = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
+    private fun renderUI() {
+        keysContainer.removeAllViews()
+
+        when (currentMode) {
+            KeyboardViewMode.QWERTY -> buildQwertyLayout()
+            KeyboardViewMode.SYMBOLS -> buildSymbolsLayout()
+            KeyboardViewMode.CODE_PALETTE -> renderCodePalette()
         }
+        updateLiveSuggestions()
+    }
+
+    private fun buildQwertyLayout() {
+        val rows = listOf(
+            listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+            listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+            listOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL"),
+            listOf("SYM", "CODE", "TAB", "SPACE", "ENTER")
+        )
+        renderStandardRows(rows)
+    }
+
+    private fun buildSymbolsLayout() {
+        val rows = listOf(
+            listOf("{", "}", "[", "]", "(", ")", "<", ">", ";", ":"),
+            listOf("=", "+", "-", "*", "/", "\\", "|", "&", "^", "%"),
+            listOf("$", "#", "@", "!", "?", "~", "_", "\"", "'", "`"),
+            listOf("==", "!=", "->", "=>", "&&", "||", "++", "--", "+=", "-="),
+            listOf("ABC", "CODE", "TAB", "SPACE", "DEL", "ENTER")
+        )
+        renderStandardRows(rows)
+    }
+
+    private fun renderCodePalette() {
+        val categories = languageDatabase[selectedLanguage] ?: return
+        val catScrollView = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val catLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
 
         categories.forEachIndexed { index, cat ->
@@ -225,17 +246,10 @@ class CodeBoardInputMethodService : InputMethodService() {
         catScrollView.addView(catLayout)
         keysContainer.addView(catScrollView)
 
-        // Grid Section: Vertical Scrollable Code Elements
         val elementsScrollView = ScrollView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
-        val elementsContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-        }
+        val elementsContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
         val activeCategory = categories.getOrNull(selectedCategoryIndex) ?: categories.first()
         activeCategory.elements.chunked(3).forEach { rowElements ->
@@ -256,6 +270,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                     }
                     setOnClickListener {
                         currentInputConnection?.commitText(elem, 1)
+                        updateLiveSuggestions()
                     }
                 }
                 rowLayout.addView(btn)
@@ -265,7 +280,6 @@ class CodeBoardInputMethodService : InputMethodService() {
         elementsScrollView.addView(elementsContainer)
         keysContainer.addView(elementsScrollView)
 
-        // Bottom Action Bar
         val bottomNav = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 110)
@@ -293,11 +307,7 @@ class CodeBoardInputMethodService : InputMethodService() {
         for (row in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    0,
-                    1f
-                )
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
             }
 
             for (key in row) {
@@ -318,12 +328,9 @@ class CodeBoardInputMethodService : InputMethodService() {
                     textSize = if (key.length > 3) 11f else 14f
                     isAllCaps = false
                     background = createDrawable(btnBgColor, borderColor)
-                    layoutParams = LinearLayout.LayoutParams(
-                        0,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        weight
-                    ).apply { setMargins(3, 3, 3, 3) }
-
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, weight).apply {
+                        setMargins(3, 3, 3, 3)
+                    }
                     setOnClickListener { handleKeyPress(key) }
                 }
                 rowLayout.addView(btn)
@@ -336,31 +343,23 @@ class CodeBoardInputMethodService : InputMethodService() {
         val ic = currentInputConnection ?: return
 
         when (key) {
-            "ABC" -> {
-                currentMode = KeyboardViewMode.QWERTY
-                renderUI()
-            }
-            "SYM" -> {
-                currentMode = KeyboardViewMode.SYMBOLS
-                renderUI()
-            }
-            "CODE" -> {
-                currentMode = KeyboardViewMode.CODE_PALETTE
-                renderUI()
-            }
+            "ABC" -> { currentMode = KeyboardViewMode.QWERTY; renderUI() }
+            "SYM" -> { currentMode = KeyboardViewMode.SYMBOLS; renderUI() }
+            "CODE" -> { currentMode = KeyboardViewMode.CODE_PALETTE; renderUI() }
             "DEL" -> {
                 val selectedText = ic.getSelectedText(0)
                 if (TextUtils.isEmpty(selectedText)) {
                     ic.deleteSurroundingText(1, 0)
                 } else {
-                ic.commitText("", 1)
+                    ic.commitText("", 1)
                 }
+                updateLiveSuggestions()
             }
-            "SPACE" -> ic.commitText(" ", 1)
-            "TAB" -> ic.commitText("    ", 1)
-            "ENTER" -> ic.commitText("\n", 1)
+            "SPACE" -> { ic.commitText(" ", 1); updateLiveSuggestions() }
+            "TAB" -> { ic.commitText("    ", 1); updateLiveSuggestions() }
+            "ENTER" -> { ic.commitText("\n", 1); updateLiveSuggestions() }
             "Shift" -> { }
-            else -> ic.commitText(key, 1)
+            else -> { ic.commitText(key, 1); updateLiveSuggestions() }
         }
     }
 
