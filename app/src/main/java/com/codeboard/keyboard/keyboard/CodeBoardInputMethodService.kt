@@ -1,321 +1,172 @@
 package com.codeboard.keyboard.keyboard
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
+import android.content.SharedPreferences
 import android.inputmethodservice.InputMethodService
-import android.os.Handler
-import android.os.Looper
-import android.text.TextUtils
-import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
 import android.widget.Button
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import com.codeboard.keyboard.R
-import com.codeboard.keyboard.data.SuggestionEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.concurrent.thread
 
 class CodeBoardInputMethodService : InputMethodService() {
 
-    private var keyboardView: View? = null
-    private var suggestionContainer: LinearLayout? = null
-    private var keysContainer: LinearLayout? = null
-    private var tvPreviewText: TextView? = null
-    private var aiChatPanel: LinearLayout? = null
-    private var chatMessagesContainer: LinearLayout? = null
-    private var chatScroll: ScrollView? = null
-    private var etAiInput: EditText? = null
+    private lateinit var keyboardView: LinearLayout
+    private lateinit var keyContainer: LinearLayout
+    private lateinit var aiChatContainer: LinearLayout
+    private lateinit var suggestionBar: LinearLayout
+    
+    private lateinit var etApiKey: EditText
+    private lateinit var etPrompt: EditText
+    private lateinit var tvAiResponse: TextView
+    private lateinit var btnSendAi: Button
+    private lateinit var btnInsertText: Button
+    private lateinit var btnBackToKeyboard: Button
+    private lateinit var btnToggleAi: Button
 
-    private val suggestionEngine = SuggestionEngine()
-    private var currentWord = ""
-    private var isShifted = false
+    private lateinit var sharedPreferences: SharedPreferences
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
+
     private var isSymbolMode = false
+    private var isShifted = false
+    private var currentWord = StringBuilder()
 
-    private val deleteHandler = Handler(Looper.getMainLooper())
-    private var isDeleting = false
-    private val deleteRunnable = object : Runnable {
-        override fun run() {
-            if (isDeleting) {
-                performDelete()
-                deleteHandler.postDelayed(this, 50)
-            }
-        }
-    }
+    private val qwertyRows = arrayOf(
+        arrayOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+        arrayOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+        arrayOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL"),
+        arrayOf("123", ",", "SPACE", ".", "AI")
+    )
+
+    private val symbolRows = arrayOf(
+        arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+        arrayOf("@", "#", "$", "_", "&", "-", "+", "(", ")", "/"),
+        arrayOf("*", "\"", "'", ":", ";", "!", "?", "ABC", "DEL"),
+        arrayOf("ABC", ",", "SPACE", ".", "AI")
+    )
+
+    // Örnek akıllı sözlük veritabanı (Genişletilebilir)
+    private val dictionary = listOf(
+        "kotlin", "android", "keyboard", "developer", "google", "gemini", 
+        "artificial", "intelligence", "code", "programming", "software", 
+        "merhaba", "nasılsın", "teşekkürler", "bilgisayar", "yazılım", "yapay", "zeka"
+    )
 
     override fun onCreateInputView(): View {
-        val view = LayoutInflater.from(this).inflate(R.layout.keyboard_view, null)
-        keyboardView = view
+        keyboardView = layoutInflater.inflate(R.layout.keyboard_view, null) as LinearLayout
+        sharedPreferences = getSharedPreferences("CodeBoardPrefs", Context.MODE_PRIVATE)
 
-        suggestionContainer = view.findViewById(R.id.suggestion_container)
-        keysContainer = view.findViewById(R.id.keys_container)
-        tvPreviewText = view.findViewById(R.id.tv_preview_text)
-        aiChatPanel = view.findViewById(R.id.ai_chat_panel)
-        chatMessagesContainer = view.findViewById(R.id.chat_messages_container)
-        chatScroll = view.findViewById(R.id.chat_scroll)
-        etAiInput = view.findViewById(R.id.et_ai_input)
+        keyContainer = keyboardView.findViewById(R.id.keyContainer)
+        aiChatContainer = keyboardView.findViewById(R.id.aiChatContainer)
+        suggestionBar = keyboardView.findViewById(R.id.suggestionBar)
+        
+        etApiKey = keyboardView.findViewById(R.id.etApiKey)
+        etPrompt = keyboardView.findViewById(R.id.etPrompt)
+        tvAiResponse = keyboardView.findViewById(R.id.tvAiResponse)
+        btnSendAi = keyboardView.findViewById(R.id.btnSendAi)
+        btnInsertText = keyboardView.findViewById(R.id.btnInsertText)
+        btnBackToKeyboard = keyboardView.findViewById(R.id.btnBackToKeyboard)
+        btnToggleAi = keyboardView.findViewById(R.id.btnToggleAi)
 
-        tvPreviewText?.background = createOutlineDrawable(cornerRadiusPx = 14f)
-        etAiInput?.background = createOutlineDrawable(cornerRadiusPx = 8f)
+        // Kayıtlı API Key'i yükle
+        etApiKey.setText(sharedPreferences.getString("GEMINI_API_KEY", ""))
 
-        val btnToggleAi: Button = view.findViewById(R.id.btn_toggle_ai)
-        val btnSendAi: Button = view.findViewById(R.id.btn_send_ai)
-        btnSendAi.background = createFilledYellowDrawable()
+        // API Key odak değiştiğinde güvenle kaydedilsin
+        etApiKey.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val key = etApiKey.text.toString().trim()
+                sharedPreferences.edit().putString("GEMINI_API_KEY", key).apply()
+            }
+        }
 
         btnToggleAi.setOnClickListener {
-            val isVisible = aiChatPanel?.visibility == View.VISIBLE
-            aiChatPanel?.visibility = if (isVisible) View.GONE else View.VISIBLE
+            keyContainer.visibility = View.GONE
+            suggestionBar.visibility = View.GONE
+            aiChatContainer.visibility = View.VISIBLE
+        }
+
+        btnBackToKeyboard.setOnClickListener {
+            aiChatContainer.visibility = View.GONE
+            keyContainer.visibility = View.VISIBLE
+            suggestionBar.visibility = View.VISIBLE
         }
 
         btnSendAi.setOnClickListener {
-            val prompt = etAiInput?.text?.toString()?.trim() ?: ""
-            if (prompt.isNotEmpty()) {
-                addChatMessage("User: $prompt", isUser = true)
-                etAiInput?.setText("")
-                sendGeminiRequest(prompt)
+            val prompt = etPrompt.text.toString().trim()
+            val apiKey = etApiKey.text.toString().trim()
+
+            if (apiKey.isEmpty()) {
+                Toast.makeText(this, "Lütfen önce Gemini API Key girin!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (prompt.isEmpty()) {
+                Toast.makeText(this, "Lütfen bir şeyler yazın!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            tvAiResponse.text = "Yapay zeka düşünüyor..."
+            callGeminiApi(apiKey, prompt)
+        }
+
+        btnInsertText.setOnClickListener {
+            val responseText = tvAiResponse.text.toString()
+            if (responseText.isNotEmpty() && responseText != "Yapay zeka düşünüyor...") {
+                currentInputConnection?.commitText(responseText, 1)
+                aiChatContainer.visibility = View.GONE
+                keyContainer.visibility = View.VISIBLE
+                suggestionBar.visibility = View.VISIBLE
+                etPrompt.setText("")
+                tvAiResponse.text = ""
             }
         }
 
         renderKeyboardLayout()
         updateSuggestions("")
-        updatePreviewText()
-        return view
-    }
-
-    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
-        super.onStartInputView(info, restarting)
-        currentWord = ""
-        updateSuggestions(currentWord)
-        updatePreviewText()
-    }
-
-    private fun addChatMessage(text: String, isUser: Boolean, isCodeResponse: Boolean = false) {
-        val messageLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(12, 8, 12, 8)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, 4, 0, 4) }
-            background = if (isUser) createOutlineDrawable(8f) else createFilledYellowDrawable()
-        }
-
-        val tv = TextView(this).apply {
-            this.text = text
-            setTextColor(if (isUser) Color.WHITE else Color.BLACK)
-            textSize = 12f
-        }
-        messageLayout.addView(tv)
-
-        if (!isUser) {
-            val btnInsert = Button(this).apply {
-                text = "⤵ Insert to Text"
-                textSize = 10f
-                setTextColor(Color.WHITE)
-                background = createOutlineDrawable(6f)
-                setOnClickListener {
-                    currentInputConnection?.commitText(text, 1)
-                }
-            }
-            messageLayout.addView(btnInsert)
-        }
-
-        chatMessagesContainer?.addView(messageLayout)
-        chatScroll?.post { chatScroll?.fullScroll(View.FOCUS_DOWN) }
-    }
-
-    private fun sendGeminiRequest(prompt: String) {
-        val sharedPrefs = getSharedPreferences("codeboard_prefs", Context.MODE_PRIVATE)
-        val apiKey = sharedPrefs.getString("gemini_api_key", "") ?: ""
-
-        if (apiKey.isEmpty()) {
-            addChatMessage("AI: Please save your Gemini API Key in the CodeBoard app first!", isUser = false)
-            return
-        }
-
-        thread {
-            try {
-                val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-
-                val jsonBody = JSONObject().apply {
-                    val contents = JSONObject().apply {
-                        val parts = JSONObject().apply {
-                            put("text", "You are a coding assistant inside a keyboard. Be concise and provide code directly: $prompt")
-                        }
-                        put("parts", org.json.JSONArray().put(parts))
-                    }
-                    put("contents", org.json.JSONArray().put(contents))
-                }
-
-                val writer = OutputStreamWriter(conn.outputStream)
-                writer.write(jsonBody.toString())
-                writer.flush()
-
-                if (conn.responseCode == 200) {
-                    val response = conn.inputStream.bufferedReader().use { it.readText() }
-                    val responseJson = JSONObject(response)
-                    val replyText = responseJson
-                        .getJSONArray("candidates")
-                        .getJSONObject(0)
-                        .getJSONObject("content")
-                        .getJSONArray("parts")
-                        .getJSONObject(0)
-                        .getString("text")
-
-                    Handler(Looper.getMainLooper()).post {
-                        addChatMessage(replyText, isUser = false)
-                    }
-                } else {
-                    Handler(Looper.getMainLooper()).post {
-                        addChatMessage("AI Error: ${conn.responseCode}", isUser = false)
-                    }
-                }
-            } catch (e: Exception) {
-                Handler(Looper.getMainLooper()).post {
-                    addChatMessage("Error: ${e.localizedMessage}", isUser = false)
-                }
-            }
-        }
-    }
-
-    private fun getSelectedLanguage(): String {
-        val sharedPrefs = getSharedPreferences("codeboard_prefs", Context.MODE_PRIVATE)
-        return sharedPrefs.getString("selected_language", "Luau") ?: "Luau"
+        return keyboardView
     }
 
     private fun renderKeyboardLayout() {
-        val container = keysContainer ?: return
-        container.removeAllViews()
+        keyContainer.removeAllViews()
+        val rows = if (isSymbolMode) symbolRows else qwertyRows
 
-        val rows = if (isSymbolMode) {
-            listOf(
-                listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
-                listOf("{", "}", "[", "]", "(", ")", "<", ">", "=", "+"),
-                listOf("-", "*", "/", "%", "&", "|", "!", "?", ":", ";"),
-                listOf("ABC", ",", "Space", "Enter")
-            )
-        } else {
-            val r1 = listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
-            val r2 = listOf("a", "s", "d", "f", "g", "h", "j", "k", "l")
-            val r3 = listOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL")
-            val r4 = listOf("?123", ",", "Space", "Enter")
-
-            if (isShifted) {
-                listOf(
-                    r1.map { it.uppercase() },
-                    r2.map { it.uppercase() },
-                    listOf("Shift") + r3.drop(1).dropLast(1).map { it.uppercase() } + listOf("DEL"),
-                    r4
-                )
-            } else {
-                listOf(r1, r2, r3, r4)
-            }
-        }
-
-        for (row in rows) {
+        for (rowKeys in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     0,
                     1f
                 )
             }
 
-            for (key in row) {
-                val weight = when (key) {
-                    "Space" -> 2.8f
-                    "Enter" -> 1.5f
-                    "Shift", "DEL", "?123", "ABC" -> 1.2f
-                    else -> 1f
-                }
-
-                val btn = Button(this).apply {
-                    text = when (key) {
-                        "Shift" -> "⇧"
-                        "DEL" -> "⌫"
-                        else -> key
-                    }
-
-                    val isEnter = key == "Enter"
-                    val isShiftActive = key == "Shift" && isShifted
-
-                    if (isEnter || isShiftActive) {
-                        setTextColor(Color.BLACK)
-                        background = createFilledYellowDrawable()
-                    } else {
-                        setTextColor(Color.WHITE)
-                        background = createOutlineDrawable(cornerRadiusPx = 12f)
-                    }
-
+            for (key in rowKeys) {
+                val button = Button(this).apply {
+                    text = if (key.length == 1 && !isSymbolMode && isShifted) key.uppercase() else key
                     layoutParams = LinearLayout.LayoutParams(
                         0,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        weight
-                    ).apply { setMargins(3, 3, 3, 3) }
-
-                    isAllCaps = false
-                    textSize = if (key == "Enter" || key == "Space") 14f else 15f
-
-                    if (key == "DEL") {
-                        setupDeleteTouchListener(this)
-                    } else {
-                        setOnClickListener { handleKeyPress(key) }
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        if (key == "SPACE") 4f else if (key == "Shift" || key == "DEL" || key == "123" || key == "ABC" || key == "AI") 1.5f else 1f
+                    ).apply {
+                        setMargins(2, 2, 2, 2)
                     }
+                    setOnClickListener { handleKeyPress(key) }
                 }
-                rowLayout.addView(btn)
+                rowLayout.addView(button)
             }
-            container.addView(rowLayout)
-        }
-    }
-
-    private fun setupDeleteTouchListener(btn: Button) {
-        btn.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    performDelete()
-                    isDeleting = true
-                    deleteHandler.postDelayed(deleteRunnable, 400)
-                    true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    isDeleting = false
-                    deleteHandler.removeCallbacks(deleteRunnable)
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    private fun createOutlineDrawable(cornerRadiusPx: Float = 12f): GradientDrawable {
-        return GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = cornerRadiusPx
-            setColor(Color.parseColor("#121212"))
-            setStroke(2, Color.parseColor("#FFD700"))
-        }
-    }
-
-    private fun createFilledYellowDrawable(): GradientDrawable {
-        return GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 12f
-            setColor(Color.parseColor("#FFD700"))
+            keyContainer.addView(rowLayout)
         }
     }
 
@@ -327,7 +178,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 isShifted = !isShifted
                 renderKeyboardLayout()
             }
-            "?123" -> {
+            "123" -> {
                 isSymbolMode = true
                 renderKeyboardLayout()
             }
@@ -335,96 +186,134 @@ class CodeBoardInputMethodService : InputMethodService() {
                 isSymbolMode = false
                 renderKeyboardLayout()
             }
-            "Space" -> {
-                ic.commitText(" ", 1)
-                currentWord = ""
-                if (isShifted) {
-                    isShifted = false
-                    renderKeyboardLayout()
+            "DEL" -> {
+                val selectedText = ic.getSelectedText(0)
+                if (!selectedText.isNullOrEmpty()) {
+                    ic.commitText("", 1)
+                } else {
+                    ic.deleteSurroundingText(1, 0)
                 }
-                updateSuggestions("")
-                updatePreviewText()
+                updateCurrentWordAndSuggest()
             }
-            "Enter" -> {
-                ic.commitText("\n", 1)
-                currentWord = ""
+            "SPACE" -> {
+                ic.commitText(" ", 1)
+                currentWord.clear()
                 updateSuggestions("")
-                updatePreviewText()
+            }
+            "AI" -> {
+                keyContainer.visibility = View.GONE
+                suggestionBar.visibility = View.GONE
+                aiChatContainer.visibility = View.VISIBLE
             }
             else -> {
-                ic.commitText(key, 1)
+                val textToCommit = if (!isSymbolMode && isShifted) key.uppercase() else key
+                ic.commitText(textToCommit, 1)
+                
                 if (isShifted) {
                     isShifted = false
                     renderKeyboardLayout()
                 }
-                updateCurrentWord()
+                updateCurrentWordAndSuggest()
             }
         }
     }
 
-    private fun performDelete() {
+    private fun updateCurrentWordAndSuggest() {
         val ic = currentInputConnection ?: return
-        val selectedText = ic.getSelectedText(0)
-        if (TextUtils.isEmpty(selectedText)) {
-            ic.deleteSurroundingText(1, 0)
+        val textBefore = ic.getTextBeforeCursor(25, 0) ?: ""
+        val lastSpace = textBefore.lastIndexOf(' ')
+        currentWord = if (lastSpace != -1) {
+            StringBuilder(textBefore.subSequence(lastSpace + 1, textBefore.length))
         } else {
-            ic.commitText("", 1)
+            StringBuilder(textBefore)
         }
-        updateCurrentWord()
-    }
-
-    private fun updateCurrentWord() {
-        val ic = currentInputConnection ?: return
-        val textBefore = ic.getTextBeforeCursor(30, 0) ?: ""
-
-        val words = textBefore.toString().split(Regex("[^a-zA-Z0-9_:#!\\-<>]"))
-        currentWord = words.lastOrNull() ?: ""
-
-        updateSuggestions(currentWord)
-        updatePreviewText()
-    }
-
-    private fun updatePreviewText() {
-        tvPreviewText?.text = if (currentWord.isNotEmpty()) "$currentWord|" else "|"
+        updateSuggestions(currentWord.toString())
     }
 
     private fun updateSuggestions(prefix: String) {
-        val container = suggestionContainer ?: return
-        container.removeAllViews()
+        suggestionBar.removeAllViews()
+        
+        val matches = if (prefix.isEmpty()) {
+            listOf("merhaba", "selam", "harika", "tamam")
+        } else {
+            dictionary.filter { it.startsWith(prefix.lowercase()) }.take(4)
+        }
 
-        val currentLang = getSelectedLanguage()
-        val suggestions = suggestionEngine.getSuggestions(currentLang, prefix, 15)
-
-        suggestions.forEach { suggestion ->
-            val btn = Button(this).apply {
-                text = suggestion.text
-                setTextColor(Color.WHITE)
-                background = createOutlineDrawable(cornerRadiusPx = 10f)
-                textSize = 12f
-                isAllCaps = false
-                maxLines = 1
-                ellipsize = TextUtils.TruncateAt.END
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                ).apply { setMargins(4, 2, 4, 2) }
-
-                setOnClickListener { applySuggestion(suggestion.text) }
+        for (word in matches) {
+            val tv = TextView(this).apply {
+                text = word
+                setPadding(24, 12, 24, 12)
+                textSize = 14f
+                setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                setOnClickListener {
+                    val ic = currentInputConnection
+                    if (ic != null && currentWord.isNotEmpty()) {
+                        ic.deleteSurroundingText(currentWord.length, 0)
+                        ic.commitText("$word ", 1)
+                        currentWord.clear()
+                        updateSuggestions("")
+                    }
+                }
             }
-            container.addView(btn)
+            suggestionBar.addView(tv)
         }
     }
 
-    private fun applySuggestion(suggestionText: String) {
-        val ic = currentInputConnection ?: return
+    private fun callGeminiApi(apiKey: String, prompt: String) {
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                val urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey"
+                val url = URL(urlString)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                connection.doOutput = true
 
-        if (currentWord.isNotEmpty()) {
-            ic.deleteSurroundingText(currentWord.length, 0)
+                val jsonBody = JSONObject().apply {
+                    put("contents", JSONArray().apply {
+                        put(JSONObject().apply {
+                            put("parts", JSONArray().apply {
+                                put(JSONObject().apply {
+                                    put("text", prompt)
+                                })
+                            })
+                        })
+                    })
+                }
+
+                connection.outputStream.write(jsonBody.toString().toByteArray(Charsets.UTF_8))
+                
+                val responseCode = connection.responseCode
+                val stream = if (responseCode == 200) connection.inputStream else connection.errorStream
+                val responseString = stream.bufferedReader().use { it.readText() }
+
+                withContext(Dispatchers.Main) {
+                    if (responseCode == 200) {
+                        val jsonResponse = JSONObject(responseString)
+                        val candidates = jsonResponse.getJSONArray("candidates")
+                        val firstCandidate = candidates.getJSONObject(0)
+                        val content = firstCandidate.getJSONObject("content")
+                        val parts = content.getJSONArray("parts")
+                        val text = parts.getJSONObject(0).getString("text")
+
+                        tvAiResponse.text = text.trim()
+                    } else {
+                        tvAiResponse.text = "Hata ($responseCode): $responseString"
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    tvAiResponse.text = "Bağlantı Hatası: ${e.localizedMessage}"
+                }
+            }
         }
+    }
 
-        ic.commitText(suggestionText, 1)
-        currentWord = ""
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        aiChatContainer.visibility = View.GONE
+        keyContainer.visibility = View.VISIBLE
+        suggestionBar.visibility = View.VISIBLE
         updateSuggestions("")
-        updatePreviewText()
     }
 }
