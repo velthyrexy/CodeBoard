@@ -1,4 +1,4 @@
-package com.codeboard.keyboard.keyboard
+package com.codeboard.keyboard
 
 import android.content.Context
 import android.content.SharedPreferences
