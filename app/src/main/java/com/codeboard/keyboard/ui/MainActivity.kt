@@ -1,4 +1,3 @@
-
 package com.codeboard.keyboard
 
 import android.content.Context
@@ -28,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         val btnSelectKeyboard: Button = findViewById(R.id.btn_select_keyboard)
         val spinnerLanguage: Spinner = findViewById(R.id.spinner_language)
 
-        // Dil Seçim Spinner'ını Doldur
+        // Populate Language Selection Spinner
         val languages = suggestionEngine.getLanguages()
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, languages)
         spinnerLanguage.adapter = adapter
@@ -44,19 +43,19 @@ class MainActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedLang = languages[position]
                 sharedPrefs.edit().putString("selected_language", selectedLang).apply()
-                Toast.makeText(this@MainActivity, "Language: $selectedLang", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Default Language: $selectedLang", Toast.LENGTH_SHORT).show()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Klavyeyi Aktifleştir Butonu
+        // Enable Keyboard Button
         btnEnableKeyboard.setOnClickListener {
             isReturningFromSettings = true
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
         }
 
-        // Klavye Seç Butonu
+        // Select Keyboard Button
         btnSelectKeyboard.setOnClickListener {
             showInputMethodPicker()
         }
@@ -64,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Ayarlar ekranından geri dönüldüyse klavye seçme ekranını otomatik aç
+        // Automatically show input method picker when returning from settings
         if (isReturningFromSettings) {
             isReturningFromSettings = false
             showInputMethodPicker()
