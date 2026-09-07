@@ -12,7 +12,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -25,7 +24,6 @@ class CodeBoardInputMethodService : InputMethodService() {
     private var suggestionContainer: LinearLayout? = null
     private var keysContainer: LinearLayout? = null
     private var tvPreviewText: TextView? = null
-    private var tvCurrentLang: TextView? = null
     
     private val suggestionEngine = SuggestionEngine()
 
@@ -51,18 +49,8 @@ class CodeBoardInputMethodService : InputMethodService() {
         suggestionContainer = view.findViewById(R.id.suggestion_container)
         keysContainer = view.findViewById(R.id.keys_container)
         tvPreviewText = view.findViewById(R.id.tv_preview_text)
-        tvCurrentLang = view.findViewById(R.id.tv_current_lang)
 
         tvPreviewText?.background = createOutlineDrawable(cornerRadiusPx = 14f)
-
-        view.findViewById<View>(R.id.btn_globe_bottom)?.setOnClickListener {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showInputMethodPicker()
-        }
-
-        view.findViewById<View>(R.id.btn_dismiss_keyboard)?.setOnClickListener {
-            requestHideSelf(0)
-        }
 
         renderKeyboardLayout()
         updateSuggestions("")
@@ -73,7 +61,6 @@ class CodeBoardInputMethodService : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         currentWord = ""
-        tvCurrentLang?.text = "${getSelectedLanguage()} ∨"
         updateSuggestions(currentWord)
         updatePreviewText()
     }
