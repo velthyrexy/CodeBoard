@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
 import android.text.TextUtils
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -20,7 +21,7 @@ class CodeBoardInputMethodService : InputMethodService() {
     private var currentWord = ""
 
     override fun onCreateInputView(): View {
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_view, null)
+        keyboardView = LayoutInflater.from(this).inflate(R.layout.keyboard_view, null)
         suggestionContainer = keyboardView.findViewById(R.id.suggestion_container)
         keysContainer = keyboardView.findViewById(R.id.keys_container)
 
@@ -81,10 +82,10 @@ class CodeBoardInputMethodService : InputMethodService() {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = 10f
             if (isSelected) {
-                setColor(Color.parseColor("#FFD700")) // Yellow background
+                setColor(Color.parseColor("#FFD700"))
             } else {
                 setColor(Color.BLACK)
-                setStroke(2, Color.parseColor("#FFD700")) // Yellow border
+                setStroke(2, Color.parseColor("#FFD700"))
             }
         }
     }
@@ -112,9 +113,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 currentWord = ""
                 updateSuggestions("")
             }
-            "Shift", "123" -> {
-                // Symbols/Shift layer functionality to be expanded in future versions
-            }
+            "Shift", "123" -> { }
             else -> {
                 ic.commitText(key, 1)
                 updateCurrentWord()
