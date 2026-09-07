@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Siyah Arka Plan -->
+    <path
+        android:fillColor="#121212"
+        android:pathData="0,0h108v108h-108z" />
+
+    <!-- Sarı Dış Çerçeve -->
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="4"
+        android:fillColor="#00000000"
+        android:pathData="M 24,24 L 84,24 A 12,12 0 0 1 96,36 L 96,72 A 12,12 0 0 1 84,84 L 24,84 A 12,12 0 0 1 12,72 L 12,36 A 12,12 0 0 1 24,24 Z" />
+
+    <!-- Kod Parantezleri İkonu (< />) -->
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M 38,44 L 28,54 L 38,64 M 70,44 L 80,54 L 70,64 M 58,40 L 50,68" />
+</vector>
