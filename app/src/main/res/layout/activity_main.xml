@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="24dp"
         android:text="CodeBoard"
         android:textColor="#FFD700"
         android:textSize="32sp"
@@ -19,46 +19,76 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_enable_keyboard"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/btn_rounded_yellow"
         android:text="1. Enable Keyboard in Settings"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:textColor="#FFFFFF" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_select_keyboard"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginBottom="32dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="24dp"
         android:background="@drawable/btn_rounded_yellow"
         android:text="2. Select CodeBoard"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:textColor="#FFFFFF" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="6dp"
+        android:text="Gemini AI Key (Free)"
+        android:textColor="#FFD700"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_marginBottom="24dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/et_api_key"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/btn_rounded_yellow"
+            android:hint="Paste Gemini API Key"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btn_save_key"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:text="Save"
+            android:textColor="#000000" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
         android:text="Select Coding Language"
         android:textColor="#FFFFFF"
-        android:textSize="14sp" />
+        android:textSize="13sp" />
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="45dp"
         android:background="@drawable/btn_rounded_yellow">
 
         <Spinner
             android:id="@+id/spinner_language"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
+            android:layout_height="match_parent" />
     </FrameLayout>
 
 </LinearLayout>
