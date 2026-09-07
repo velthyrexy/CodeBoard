@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.TextView
 import com.codeboard.keyboard.R
 import com.codeboard.keyboard.data.SuggestionEngine
 
@@ -23,7 +22,6 @@ class CodeBoardInputMethodService : InputMethodService() {
     private var keyboardView: View? = null
     private var suggestionContainer: LinearLayout? = null
     private var keysContainer: LinearLayout? = null
-    private var tvPreviewText: TextView? = null
     
     private val suggestionEngine = SuggestionEngine()
 
@@ -48,13 +46,9 @@ class CodeBoardInputMethodService : InputMethodService() {
         keyboardView = view
         suggestionContainer = view.findViewById(R.id.suggestion_container)
         keysContainer = view.findViewById(R.id.keys_container)
-        tvPreviewText = view.findViewById(R.id.tv_preview_text)
-
-        tvPreviewText?.background = createOutlineDrawable(cornerRadiusPx = 14f)
 
         renderKeyboardLayout()
         updateSuggestions("")
-        updatePreviewText()
         return view
     }
 
@@ -62,7 +56,6 @@ class CodeBoardInputMethodService : InputMethodService() {
         super.onStartInputView(info, restarting)
         currentWord = ""
         updateSuggestions(currentWord)
-        updatePreviewText()
     }
 
     private fun getSelectedLanguage(): String {
@@ -219,13 +212,11 @@ class CodeBoardInputMethodService : InputMethodService() {
                     renderKeyboardLayout()
                 }
                 updateSuggestions("")
-                updatePreviewText()
             }
             "Enter" -> {
                 ic.commitText("\n", 1)
                 currentWord = ""
                 updateSuggestions("")
-                updatePreviewText()
             }
             else -> {
                 ic.commitText(key, 1)
@@ -257,11 +248,6 @@ class CodeBoardInputMethodService : InputMethodService() {
         currentWord = words.lastOrNull() ?: ""
 
         updateSuggestions(currentWord)
-        updatePreviewText()
-    }
-
-    private fun updatePreviewText() {
-        tvPreviewText?.text = if (currentWord.isNotEmpty()) "$currentWord|" else "|"
     }
 
     private fun updateSuggestions(prefix: String) {
@@ -301,6 +287,5 @@ class CodeBoardInputMethodService : InputMethodService() {
         ic.commitText(suggestionText, 1)
         currentWord = ""
         updateSuggestions("")
-        updatePreviewText()
     }
 }
