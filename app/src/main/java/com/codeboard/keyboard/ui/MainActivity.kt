@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedLang = languages[position]
                 sharedPrefs.edit().putString("selected_language", selectedLang).apply()
-                Toast.makeText(this@MainActivity, "Varsayılan Dil: $selectedLang", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Language: $selectedLang", Toast.LENGTH_SHORT).show()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
