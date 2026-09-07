@@ -3,120 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#1E1E1E">
+    android:background="#050505"
+    android:padding="6dp">
 
-    <!-- Öneri Çubuğu (Autocomplete / Suggestions) -->
-    <LinearLayout
-        android:id="@+id/suggestionBar"
+    <!-- Öneri Çubuğu (Suggestions) -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:scrollbars="none"
+        android:layout_marginBottom="6dp">
+
+        <LinearLayout
+            android:id="@+id/suggestion_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <!-- Metin Önizleme Kutusu (pro|) -->
+    <TextView
+        android:id="@+id/tv_preview_text"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:orientation="horizontal"
-        android:background="#2D2D2D"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:gravity="center_vertical"
-        android:paddingHorizontal="4dp" />
+        android:layout_marginBottom="6dp" />
 
-    <!-- Klavye Tuş Takımı Alanı -->
+    <!-- Klavye Tuş Konteynırı -->
     <LinearLayout
-        android:id="@+id/keyContainer"
+        android:id="@+id/keys_container"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:orientation="vertical"
-        android:padding="4dp" />
-
-    <!-- Yapay Zeka (AI) Sohbet ve Panel Alanı (Başlangıçta Gizli) -->
-    <LinearLayout
-        android:id="@+id/aiChatContainer"
-        android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:orientation="vertical"
-        android:background="#252526"
-        android:padding="12dp"
-        android:visibility="gone">
-
-        <!-- API Key Kutusu -->
-        <EditText
-            android:id="@+id/etApiKey"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Gemini API Key Girin"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:textSize="14sp"
-            android:inputType="textPassword"
-            android:backgroundTint="#007ACC"
-            android:padding="8dp" />
-
-        <!-- İstek / Prompt Kutusu ve Gönder Butonu -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp">
-
-            <EditText
-                android:id="@+id/etPrompt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="Yapay zekaya ne yazdıralım?"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#888888"
-                android:textSize="14sp"
-                android:backgroundTint="#007ACC" />
-
-            <Button
-                android:id="@+id/btnSendAi"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Gönder"
-                android:backgroundTint="#007ACC"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-
-        <!-- AI Cevap Ekranı (Kaydırılabilir) -->
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="8dp"
-            android:background="#1E1E1E"
-            android:padding="8dp">
-
-            <TextView
-                android:id="@+id/tvAiResponse"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Yapay zeka yanıtı burada görünecek..."
-                android:textColor="#CCCCCC"
-                android:textSize="14sp" />
-        </ScrollView>
-
-        <!-- Alt Kontrol Butonları (Metni Ekle & Klavyeye Dön) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:gravity="end">
-
-            <Button
-                android:id="@+id/btnBackToKeyboard"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Klavyeye Dön"
-                android:backgroundTint="#444444"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/btnInsertText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Metne Ekle"
-                android:backgroundTint="#28A745"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-
-    </LinearLayout>
+        android:layout_height="200dp"
+        android:orientation="vertical" />
 
 </LinearLayout>
