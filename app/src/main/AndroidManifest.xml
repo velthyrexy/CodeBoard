@@ -7,7 +7,7 @@
         android:label="CodeBoard"
         android:roundIcon="@android:drawable/sym_def_app_icon"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
+        android:theme="@style/Theme.AppCompat.NoActionBar">
 
         <activity
             android:name=".MainActivity"
@@ -20,9 +20,9 @@
 
         <service
             android:name=".keyboard.CodeBoardInputMethodService"
+            android:exported="true"
             android:label="CodeBoard Keyboard"
-            android:permission="android.permission.BIND_INPUT_METHOD"
-            android:exported="true">
+            android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
