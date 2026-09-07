@@ -20,18 +20,6 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
-    <!-- Metin Önizleme Kutusu (pro|) -->
-    <TextView
-        android:id="@+id/tv_preview_text"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:textColor="#FFFFFF"
-        android:textSize="17sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="6dp" />
-
     <!-- Klavye Tuş Konteynırı -->
     <LinearLayout
         android:id="@+id/keys_container"
