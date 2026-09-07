@@ -10,20 +10,20 @@
         android:id="@+id/btn_enable_keyboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="1. Klavyeyi Etkinleştir"
+        android:text="1. Enable Keyboard"
         android:layout_marginBottom="16dp" />
 
     <Button
         android:id="@+id/btn_select_keyboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="2. CodeBoard Klavyeyi Seç"
+        android:text="2. Select CodeBoard Keyboard"
         android:layout_marginBottom="32dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Kodlama Dili Seçin:"
+        android:text="Select Coding Language:"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
