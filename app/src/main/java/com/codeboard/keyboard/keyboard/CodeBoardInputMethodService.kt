@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
@@ -52,8 +53,8 @@ class CodeBoardInputMethodService : InputMethodService() {
         return keyboardView
     }
 
-    override fun onStartInputBinding(attribute: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
-        super.onStartInputBinding(attribute, restarting)
+    override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(attribute, restarting)
         updateSuggestions(currentWord)
     }
 
