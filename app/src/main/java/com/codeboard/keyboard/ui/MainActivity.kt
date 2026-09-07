@@ -9,45 +9,37 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.codeboard.keyboard.data.SuggestionEngine
 
 class MainActivity : AppCompatActivity() {
-
-    private val suggestionEngine = SuggestionEngine()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btnEnableKeyboard: Button = findViewById(R.id.btn_enable_keyboard)
-        val btnSelectKeyboard: Button = findViewById(R.id.btn_select_keyboard)
-        val spinnerLanguage: Spinner = findViewById(R.id.spinner_language)
-        val etApiKey: EditText = findViewById(R.id.et_api_key)
-        val btnSaveKey: Button = findViewById(R.id.btn_save_key)
+        val btnEnable = findViewById<Button>(R.id.btn_enable_keyboard)
+        val btnSelect = findViewById<Button>(R.id.btn_select_keyboard)
+        val spinnerLanguage = findViewById<Spinner>(R.id.spinner_language)
 
-        val sharedPrefs = getSharedPreferences("codeboard_prefs", Context.MODE_PRIVATE)
-
-        // API Key Yükle
-        etApiKey.setText(sharedPrefs.getString("gemini_api_key", ""))
-
-        btnSaveKey.setOnClickListener {
-            val key = etApiKey.text.toString().trim()
-            sharedPrefs.edit().putString("gemini_api_key", key).apply()
-            Toast.makeText(this, "Gemini API Key Saved!", Toast.LENGTH_SHORT).show()
+        btnEnable.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
         }
 
-        val languages = suggestionEngine.getLanguages()
+        btnSelect.setOnClickListener {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showInputMethodPicker()
+        }
+
+        val languages = arrayOf("Luau", "Python", "JavaScript", "C++", "Java", "HTML/CSS")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, languages)
         spinnerLanguage.adapter = adapter
 
-        val currentLang = sharedPrefs.getString("selected_language", "Luau")
-        val defaultPosition = languages.indexOf(currentLang)
-        if (defaultPosition >= 0) {
-            spinnerLanguage.setSelection(defaultPosition)
+        val sharedPrefs = getSharedPreferences("codeboard_prefs", Context.MODE_PRIVATE)
+        val savedLang = sharedPrefs.getString("selected_language", "Luau")
+        val savedPos = languages.indexOf(savedLang)
+        if (savedPos >= 0) {
+            spinnerLanguage.setSelection(savedPos)
         }
 
         spinnerLanguage.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -55,16 +47,8 @@ class MainActivity : AppCompatActivity() {
                 val selectedLang = languages[position]
                 sharedPrefs.edit().putString("selected_language", selectedLang).apply()
             }
+
             override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
-
-        btnEnableKeyboard.setOnClickListener {
-            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-        }
-
-        btnSelectKeyboard.setOnClickListener {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showInputMethodPicker()
         }
     }
 }
