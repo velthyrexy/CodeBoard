@@ -1,6 +1,5 @@
 package com.codeboard.keyboard.keyboard
 
-import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -16,7 +15,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.TextView
 import com.codeboard.keyboard.R
 import com.codeboard.keyboard.data.SuggestionEngine
 
@@ -25,13 +24,16 @@ class CodeBoardInputMethodService : InputMethodService() {
     private var keyboardView: View? = null
     private var suggestionContainer: LinearLayout? = null
     private var keysContainer: LinearLayout? = null
+    private var tvPreviewText: TextView? = null
+    private var tvCurrentLang: TextView? = null
+    
     private val suggestionEngine = SuggestionEngine()
 
     private var currentWord = ""
     private var isShifted = false
     private var isSymbolMode = false
 
-    // DEL hold-to-delete mechanism
+    // DEL basılı tutma mekanizması
     private val deleteHandler = Handler(Looper.getMainLooper())
     private var isDeleting = false
     private val deleteRunnable = object : Runnable {
@@ -48,16 +50,32 @@ class CodeBoardInputMethodService : InputMethodService() {
         keyboardView = view
         suggestionContainer = view.findViewById(R.id.suggestion_container)
         keysContainer = view.findViewById(R.id.keys_container)
+        tvPreviewText = view.findViewById(R.id.tv_preview_text)
+        tvCurrentLang = view.findViewById(R.id.tv_current_lang)
+
+        tvPreviewText?.background = createOutlineDrawable(cornerRadiusPx = 14f)
+
+        view.findViewById<View>(R.id.btn_globe_bottom)?.setOnClickListener {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showInputMethodPicker()
+        }
+
+        view.findViewById<View>(R.id.btn_dismiss_keyboard)?.setOnClickListener {
+            requestHideSelf(0)
+        }
 
         renderKeyboardLayout()
         updateSuggestions("")
+        updatePreviewText()
         return view
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         currentWord = ""
+        tvCurrentLang?.text = "${getSelectedLanguage()} ∨"
         updateSuggestions(currentWord)
+        updatePreviewText()
     }
 
     private fun getSelectedLanguage(): String {
@@ -74,19 +92,19 @@ class CodeBoardInputMethodService : InputMethodService() {
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
                 listOf("{", "}", "[", "]", "(", ")", "<", ">", "=", "+"),
                 listOf("-", "*", "/", "%", "&", "|", "!", "?", ":", ";"),
-                listOf("ABC", "🌐", "SPACE", "ENTER", "DEL")
+                listOf("ABC", ",", "Space", "Enter")
             )
         } else {
             val r1 = listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
             val r2 = listOf("a", "s", "d", "f", "g", "h", "j", "k", "l")
             val r3 = listOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL")
-            val r4 = listOf("123", "🌐", "SPACE", "ENTER")
+            val r4 = listOf("?123", ",", "Space", "Enter")
 
             if (isShifted) {
                 listOf(
                     r1.map { it.uppercase() },
                     r2.map { it.uppercase() },
-                    listOf("SHIFT") + r3.drop(1).dropLast(1).map { it.uppercase() } + listOf("DEL"),
+                    listOf("Shift") + r3.drop(1).dropLast(1).map { it.uppercase() } + listOf("DEL"),
                     r4
                 )
             } else {
@@ -106,26 +124,41 @@ class CodeBoardInputMethodService : InputMethodService() {
 
             for (key in row) {
                 val weight = when (key) {
-                    "SPACE" -> 3f
-                    "ENTER", "DEL", "Shift", "SHIFT", "123", "ABC" -> 1.3f
-                    "🌐" -> 1f
+                    "Space" -> 2.8f
+                    "Enter" -> 1.5f
+                    "Shift", "DEL", "?123", "ABC" -> 1.2f
                     else -> 1f
                 }
 
                 val btn = Button(this).apply {
-                    text = key
-                    setTextColor(Color.WHITE)
+                    text = when (key) {
+                        "Shift" -> "⇧"
+                        "DEL" -> "⌫"
+                        else -> key
+                    }
                     
-                    val activeKey = (key == "Shift" && isShifted) || (key == "SHIFT" && isShifted)
-                    background = createButtonDrawable(isSelected = activeKey)
-                    
+                    val isEnter = key == "Enter"
+                    val isShiftActive = key == "Shift" && isShifted
+
+                    if (isEnter) {
+                        setTextColor(Color.BLACK)
+                        background = createFilledYellowDrawable()
+                    } else if (isShiftActive) {
+                        setTextColor(Color.BLACK)
+                        background = createFilledYellowDrawable()
+                    } else {
+                        setTextColor(Color.WHITE)
+                        background = createOutlineDrawable(cornerRadiusPx = 12f)
+                    }
+
                     layoutParams = LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         weight
                     ).apply { setMargins(3, 3, 3, 3) }
+                    
                     isAllCaps = false
-                    textSize = 13f
+                    textSize = if (key == "Enter" || key == "Space") 14f else 15f
 
                     if (key == "DEL") {
                         setupDeleteTouchListener(this)
@@ -158,16 +191,20 @@ class CodeBoardInputMethodService : InputMethodService() {
         }
     }
 
-    private fun createButtonDrawable(isSelected: Boolean): GradientDrawable {
+    private fun createOutlineDrawable(cornerRadiusPx: Float = 12f): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = 10f
-            if (isSelected) {
-                setColor(Color.parseColor("#FFD700"))
-            } else {
-                setColor(Color.parseColor("#1A1A1A"))
-                setStroke(2, Color.parseColor("#FFD700"))
-            }
+            cornerRadius = cornerRadiusPx
+            setColor(Color.parseColor("#121212"))
+            setStroke(2, Color.parseColor("#FFD700"))
+        }
+    }
+
+    private fun createFilledYellowDrawable(): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 12f
+            setColor(Color.parseColor("#FFD700"))
         }
     }
 
@@ -175,11 +212,11 @@ class CodeBoardInputMethodService : InputMethodService() {
         val ic = currentInputConnection ?: return
 
         when (key) {
-            "Shift", "SHIFT" -> {
+            "Shift" -> {
                 isShifted = !isShifted
                 renderKeyboardLayout()
             }
-            "123" -> {
+            "?123" -> {
                 isSymbolMode = true
                 renderKeyboardLayout()
             }
@@ -187,11 +224,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 isSymbolMode = false
                 renderKeyboardLayout()
             }
-            "🌐" -> {
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showInputMethodPicker()
-            }
-            "SPACE" -> {
+            "Space" -> {
                 ic.commitText(" ", 1)
                 currentWord = ""
                 if (isShifted) {
@@ -199,11 +232,13 @@ class CodeBoardInputMethodService : InputMethodService() {
                     renderKeyboardLayout()
                 }
                 updateSuggestions("")
+                updatePreviewText()
             }
-            "ENTER" -> {
+            "Enter" -> {
                 ic.commitText("\n", 1)
                 currentWord = ""
                 updateSuggestions("")
+                updatePreviewText()
             }
             else -> {
                 ic.commitText(key, 1)
@@ -235,23 +270,16 @@ class CodeBoardInputMethodService : InputMethodService() {
         currentWord = words.lastOrNull() ?: ""
 
         updateSuggestions(currentWord)
+        updatePreviewText()
+    }
+
+    private fun updatePreviewText() {
+        tvPreviewText?.text = if (currentWord.isNotEmpty()) "$currentWord|" else "|"
     }
 
     private fun updateSuggestions(prefix: String) {
         val container = suggestionContainer ?: return
         container.removeAllViews()
-
-        // Clipboard Button
-        val pasteBtn = Button(this).apply {
-            text = "📋 Paste"
-            setTextColor(Color.BLACK)
-            background = createButtonDrawable(isSelected = true)
-            textSize = 11f
-            isAllCaps = false
-            setPadding(12, 0, 12, 0)
-            setOnClickListener { pasteFromClipboard() }
-        }
-        container.addView(pasteBtn)
 
         val currentLang = getSelectedLanguage()
         val suggestions = suggestionEngine.getSuggestions(currentLang, prefix, 15)
@@ -260,34 +288,20 @@ class CodeBoardInputMethodService : InputMethodService() {
             val btn = Button(this).apply {
                 text = suggestion.text
                 setTextColor(Color.WHITE)
-                background = createButtonDrawable(isSelected = false)
-                textSize = 11f
+                background = createOutlineDrawable(cornerRadiusPx = 10f)
+                textSize = 12f
                 isAllCaps = false
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
-                ).apply { setMargins(4, 4, 4, 4) }
+                ).apply { setMargins(4, 2, 4, 2) }
 
                 setOnClickListener { applySuggestion(suggestion.text) }
             }
             container.addView(btn)
         }
-    }
-
-    private fun pasteFromClipboard() {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        if (clipboard.hasPrimaryClip()) {
-            val clipData = clipboard.primaryClip
-            if (clipData != null && clipData.itemCount > 0) {
-                val pasteText = clipData.getItemAt(0).coerceToText(this).toString()
-                currentInputConnection?.commitText(pasteText, 1)
-                updateCurrentWord()
-                return
-            }
-        }
-        Toast.makeText(this, "Clipboard is empty!", Toast.LENGTH_SHORT).show()
     }
 
     private fun applySuggestion(suggestionText: String) {
@@ -300,5 +314,6 @@ class CodeBoardInputMethodService : InputMethodService() {
         ic.commitText(suggestionText, 1)
         currentWord = ""
         updateSuggestions("")
+        updatePreviewText()
     }
 }
