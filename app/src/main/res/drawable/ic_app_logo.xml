@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Siyah Arka Plan (Yuvarlatılmış Köşeli) -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M 15,0 L 85,0 A 15,15 0 0 1 100,15 L 100,85 A 15,15 0 0 1 85,100 L 15,100 A 15,15 0 0 1 0,85 L 0,15 A 15,15 0 0 1 15,0 Z" />
+
+    <!-- Kod Parantezleri: < (Sarı) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M 40,25 L 26,34 L 40,43 L 36,48 L 18,34 L 36,20 Z" />
+
+    <!-- Kod Parantezleri: / (Beyaz) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 54,18 L 44,50 L 50,50 L 60,18 Z" />
+
+    <!-- Kod Parantezleri: > (Sarı) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M 60,25 L 74,34 L 60,43 L 64,48 L 82,34 L 64,20 Z" />
+
+    <!-- Klavye Gövdesi (Sarı Çerçeve) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M 28,48 L 72,48 A 4,4 0 0 1 76,52 L 80,68 A 4,4 0 0 1 76,72 L 24,72 A 4,4 0 0 1 20,68 L 24,52 A 4,4 0 0 1 28,48 Z M 28,52 L 25,68 L 75,68 L 72,52 Z" />
+
+    <!-- Klavye Tuşları (Sarı Dolgu) -->
+    <!-- Satır 1 -->
+    <path android:fillColor="#FFD700" android:pathData="M 30,53 h 5 v 3 h -5 z M 37,53 h 5 v 3 h -5 z M 44,53 h 5 v 3 h -5 z M 51,53 h 5 v 3 h -5 z M 58,53 h 5 v 3 h -5 z M 65,53 h 5 v 3 h -5 z" />
+    <!-- Satır 2 -->
+    <path android:fillColor="#FFD700" android:pathData="M 29,58 h 5 v 3 h -5 z M 36,58 h 5 v 3 h -5 z M 43,58 h 5 v 3 h -5 z M 50,58 h 5 v 3 h -5 z M 57,58 h 5 v 3 h -5 z M 64,58 h 5 v 3 h -5 z M 71,58 h 5 v 3 h -5 z" />
+    <!-- Satır 3 (Space Bar & Yan Tuşlar) -->
+    <path android:fillColor="#FFD700" android:pathData="M 31,63 h 6 v 3 h -6 z M 39,63 h 22 v 3 h -22 z M 63,63 h 6 v 3 h -6 z" />
+
+    <!-- CodeBoard Yazısı (Code: Beyaz, Board: Sarı) -->
+    <!-- C -->
+    <path android:fillColor="#FFFFFF" android:pathData="M 16,80 h 5 v 2 h -3 v 4 h 3 v 2 h -5 z" />
+    <!-- o -->
+    <path android:fillColor="#FFFFFF" android:pathData="M 22,82 h 4 v 6 h -4 z M 24,84 h 0.5 v 2 h -0.5 z" />
+    <!-- d -->
+    <path android:fillColor="#FFFFFF" android:pathData="M 31,80 v 8 h -4 v -6 h 4 z M 29,82 h -1 v 4 h 1 z" />
+    <!-- e -->
+    <path android:fillColor="#FFFFFF" android:pathData="M 33,82 h 4 v 6 h -4 z M 35,84 h 1 v 1 h -1 z" />
+
+    <!-- B -->
+    <path android:fillColor="#FFD700" android:pathData="M 40,80 h 4 v 3.5 h -2 v 1 h 2 v 3.5 h -4 z" />
+    <!-- o -->
+    <path android:fillColor="#FFD700" android:pathData="M 45,82 h 4 v 6 h -4 z" />
+    <!-- a -->
+    <path android:fillColor="#FFD700" android:pathData="M 50,82 h 4 v 6 h -4 z" />
+    <!-- r -->
+    <path android:fillColor="#FFD700" android:pathData="M 55,82 h 4 v 2 h -2 v 4 h -2 z" />
+    <!-- d -->
+    <path android:fillColor="#FFD700" android:pathData="M 64,80 v 8 h -4 v -6 h 4 z" />
+
+</vector>
