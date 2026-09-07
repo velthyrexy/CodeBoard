@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="codeboard_black">#000000</color>
+    <color name="codeboard_dark_gray">#121212</color>
+    <color name="codeboard_yellow">#FFD700</color>
+    <color name="codeboard_white">#FFFFFF</color>
+</resources>
