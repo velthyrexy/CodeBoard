@@ -3,42 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/codeboard_black"
-    android:gravity="center"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:gravity="center">
+
+    <Button
+        android:id="@+id/btn_enable_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Klavyeyi Etkinleştir"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_select_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="2. CodeBoard Klavyeyi Seç"
+        android:layout_marginBottom="32dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CodeBoard"
-        android:textSize="36sp"
+        android:text="Kodlama Dili Seçin:"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="@color/codeboard_yellow"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Smart keyboard built for programming."
-        android:textColor="@color/codeboard_white"
-        android:textAlignment="center"
-        android:layout_marginBottom="48dp"/>
-
-    <Button
-        android:id="@+id/btnEnableKeyboard"
+    <Spinner
+        android:id="@+id/spinner_language"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Enable Keyboard"
-        android:textColor="@color/codeboard_black"
-        android:backgroundTint="@color/codeboard_yellow"
-        android:layout_marginBottom="16dp"/>
+        android:layout_height="48dp" />
 
-    <Button
-        android:id="@+id/btnSelectLanguage"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Select Language (Luau)"
-        android:textColor="@color/codeboard_white"
-        android:backgroundTint="@color/codeboard_dark_gray"
-        android:layout_marginBottom="16dp"/>
 </LinearLayout>
