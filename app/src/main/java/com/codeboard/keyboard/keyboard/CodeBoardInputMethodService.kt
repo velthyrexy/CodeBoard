@@ -8,7 +8,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.widget.Button
 import android.widget.EditText
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -35,7 +34,6 @@ class CodeBoardInputMethodService : InputMethodService() {
     private lateinit var btnSendAi: Button
     private lateinit var btnInsertText: Button
     private lateinit var btnBackToKeyboard: Button
-    private lateinit var btnToggleAi: Button
 
     private lateinit var sharedPreferences: SharedPreferences
     private val serviceScope = CoroutineScope(Dispatchers.Main)
@@ -58,7 +56,6 @@ class CodeBoardInputMethodService : InputMethodService() {
         arrayOf("ABC", ",", "SPACE", ".", "AI")
     )
 
-    // Örnek akıllı sözlük veritabanı (Genişletilebilir)
     private val dictionary = listOf(
         "kotlin", "android", "keyboard", "developer", "google", "gemini", 
         "artificial", "intelligence", "code", "programming", "software", 
@@ -79,23 +76,14 @@ class CodeBoardInputMethodService : InputMethodService() {
         btnSendAi = keyboardView.findViewById(R.id.btnSendAi)
         btnInsertText = keyboardView.findViewById(R.id.btnInsertText)
         btnBackToKeyboard = keyboardView.findViewById(R.id.btnBackToKeyboard)
-        btnToggleAi = keyboardView.findViewById(R.id.btnToggleAi)
 
-        // Kayıtlı API Key'i yükle
         etApiKey.setText(sharedPreferences.getString("GEMINI_API_KEY", ""))
 
-        // API Key odak değiştiğinde güvenle kaydedilsin
         etApiKey.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val key = etApiKey.text.toString().trim()
                 sharedPreferences.edit().putString("GEMINI_API_KEY", key).apply()
             }
-        }
-
-        btnToggleAi.setOnClickListener {
-            keyContainer.visibility = View.GONE
-            suggestionBar.visibility = View.GONE
-            aiChatContainer.visibility = View.VISIBLE
         }
 
         btnBackToKeyboard.setOnClickListener {
