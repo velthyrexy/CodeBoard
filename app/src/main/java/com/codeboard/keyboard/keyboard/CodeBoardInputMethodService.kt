@@ -22,9 +22,9 @@ import com.codeboard.keyboard.data.SuggestionEngine
 
 class CodeBoardInputMethodService : InputMethodService() {
 
-    private lateinit var keyboardView: View
-    private lateinit var suggestionContainer: LinearLayout
-    private lateinit var keysContainer: LinearLayout
+    private var keyboardView: View? = null
+    private var suggestionContainer: LinearLayout? = null
+    private var keysContainer: LinearLayout? = null
     private val suggestionEngine = SuggestionEngine()
 
     private var currentWord = ""
@@ -44,17 +44,19 @@ class CodeBoardInputMethodService : InputMethodService() {
     }
 
     override fun onCreateInputView(): View {
-        keyboardView = LayoutInflater.from(this).inflate(R.layout.keyboard_view, null)
-        suggestionContainer = keyboardView.findViewById(R.id.suggestion_container)
-        keysContainer = keyboardView.findViewById(R.id.keys_container)
+        val view = LayoutInflater.from(this).inflate(R.layout.keyboard_view, null)
+        keyboardView = view
+        suggestionContainer = view.findViewById(R.id.suggestion_container)
+        keysContainer = view.findViewById(R.id.keys_container)
 
         renderKeyboardLayout()
         updateSuggestions("")
-        return keyboardView
+        return view
     }
 
-    override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
-        super.onStartInput(attribute, restarting)
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        currentWord = ""
         updateSuggestions(currentWord)
     }
 
@@ -64,7 +66,8 @@ class CodeBoardInputMethodService : InputMethodService() {
     }
 
     private fun renderKeyboardLayout() {
-        keysContainer.removeAllViews()
+        val container = keysContainer ?: return
+        container.removeAllViews()
 
         val rows = if (isSymbolMode) {
             listOf(
@@ -132,7 +135,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 }
                 rowLayout.addView(btn)
             }
-            keysContainer.addView(rowLayout)
+            container.addView(rowLayout)
         }
     }
 
@@ -235,7 +238,8 @@ class CodeBoardInputMethodService : InputMethodService() {
     }
 
     private fun updateSuggestions(prefix: String) {
-        suggestionContainer.removeAllViews()
+        val container = suggestionContainer ?: return
+        container.removeAllViews()
 
         // Clipboard Button
         val pasteBtn = Button(this).apply {
@@ -247,7 +251,7 @@ class CodeBoardInputMethodService : InputMethodService() {
             setPadding(12, 0, 12, 0)
             setOnClickListener { pasteFromClipboard() }
         }
-        suggestionContainer.addView(pasteBtn)
+        container.addView(pasteBtn)
 
         val currentLang = getSelectedLanguage()
         val suggestions = suggestionEngine.getSuggestions(currentLang, prefix, 15)
@@ -268,7 +272,7 @@ class CodeBoardInputMethodService : InputMethodService() {
 
                 setOnClickListener { applySuggestion(suggestion.text) }
             }
-            suggestionContainer.addView(btn)
+            container.addView(btn)
         }
     }
 
