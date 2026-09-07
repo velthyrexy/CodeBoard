@@ -2,7 +2,6 @@ package com.codeboard.keyboard.data
 
 data class Suggestion(
     val text: String,
-    val type: String,
-    val popularity: Int,
-    val isSnippet: Boolean = false
+    val type: String = "keyword",
+    val popularity: Int = 0
 )
