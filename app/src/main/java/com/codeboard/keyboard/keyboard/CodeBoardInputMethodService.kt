@@ -1,14 +1,21 @@
 package com.codeboard.keyboard.keyboard
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.Toast
 import com.codeboard.keyboard.R
 import com.codeboard.keyboard.data.SuggestionEngine
 
@@ -20,10 +27,20 @@ class CodeBoardInputMethodService : InputMethodService() {
     private val suggestionEngine = SuggestionEngine()
 
     private var currentWord = ""
-    private var currentLanguage = "Luau"
     private var isShifted = false
     private var isSymbolMode = false
-    private var isLanguageMenuOpen = false
+
+    // DEL basılı tutma mekanizması
+    private val deleteHandler = Handler(Looper.getMainLooper())
+    private var isDeleting = false
+    private val deleteRunnable = object : Runnable {
+        override fun run() {
+            if (isDeleting) {
+                performDelete()
+                deleteHandler.postDelayed(this, 50)
+            }
+        }
+    }
 
     override fun onCreateInputView(): View {
         keyboardView = LayoutInflater.from(this).inflate(R.layout.keyboard_view, null)
@@ -35,6 +52,16 @@ class CodeBoardInputMethodService : InputMethodService() {
         return keyboardView
     }
 
+    override fun onStartInputBinding(attribute: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInputBinding(attribute, restarting)
+        updateSuggestions(currentWord)
+    }
+
+    private fun getSelectedLanguage(): String {
+        val sharedPrefs = getSharedPreferences("codeboard_prefs", Context.MODE_PRIVATE)
+        return sharedPrefs.getString("selected_language", "Luau") ?: "Luau"
+    }
+
     private fun renderKeyboardLayout() {
         keysContainer.removeAllViews()
 
@@ -43,13 +70,13 @@ class CodeBoardInputMethodService : InputMethodService() {
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
                 listOf("{", "}", "[", "]", "(", ")", "<", ">", "=", "+"),
                 listOf("-", "*", "/", "%", "&", "|", "!", "?", ":", ";"),
-                listOf("ABC", "SPACE", "ENTER", "DEL")
+                listOf("ABC", "🌐", "SPACE", "ENTER", "DEL")
             )
         } else {
             val r1 = listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
             val r2 = listOf("a", "s", "d", "f", "g", "h", "j", "k", "l")
             val r3 = listOf("Shift", "z", "x", "c", "v", "b", "n", "m", "DEL")
-            val r4 = listOf("123", "SPACE", "ENTER")
+            val r4 = listOf("123", "🌐", "SPACE", "ENTER")
 
             if (isShifted) {
                 listOf(
@@ -76,7 +103,8 @@ class CodeBoardInputMethodService : InputMethodService() {
             for (key in row) {
                 val weight = when (key) {
                     "SPACE" -> 3f
-                    "ENTER", "DEL", "Shift", "SHIFT", "123", "ABC" -> 1.5f
+                    "ENTER", "DEL", "Shift", "SHIFT", "123", "ABC" -> 1.3f
+                    "🌐" -> 1f
                     else -> 1f
                 }
 
@@ -95,11 +123,34 @@ class CodeBoardInputMethodService : InputMethodService() {
                     isAllCaps = false
                     textSize = 13f
 
-                    setOnClickListener { handleKeyPress(key) }
+                    if (key == "DEL") {
+                        setupDeleteTouchListener(this)
+                    } else {
+                        setOnClickListener { handleKeyPress(key) }
+                    }
                 }
                 rowLayout.addView(btn)
             }
             keysContainer.addView(rowLayout)
+        }
+    }
+
+    private fun setupDeleteTouchListener(btn: Button) {
+        btn.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    performDelete()
+                    isDeleting = true
+                    deleteHandler.postDelayed(deleteRunnable, 400)
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    isDeleting = false
+                    deleteHandler.removeCallbacks(deleteRunnable)
+                    true
+                }
+                else -> false
+            }
         }
     }
 
@@ -132,14 +183,9 @@ class CodeBoardInputMethodService : InputMethodService() {
                 isSymbolMode = false
                 renderKeyboardLayout()
             }
-            "DEL" -> {
-                val selectedText = ic.getSelectedText(0)
-                if (TextUtils.isEmpty(selectedText)) {
-                    ic.deleteSurroundingText(1, 0)
-                } else {
-                    ic.commitText("", 1)
-                }
-                updateCurrentWord()
+            "🌐" -> {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showInputMethodPicker()
             }
             "SPACE" -> {
                 ic.commitText(" ", 1)
@@ -166,6 +212,17 @@ class CodeBoardInputMethodService : InputMethodService() {
         }
     }
 
+    private fun performDelete() {
+        val ic = currentInputConnection ?: return
+        val selectedText = ic.getSelectedText(0)
+        if (TextUtils.isEmpty(selectedText)) {
+            ic.deleteSurroundingText(1, 0)
+        } else {
+            ic.commitText("", 1)
+        }
+        updateCurrentWord()
+    }
+
     private fun updateCurrentWord() {
         val ic = currentInputConnection ?: return
         val textBefore = ic.getTextBeforeCursor(30, 0) ?: ""
@@ -179,62 +236,53 @@ class CodeBoardInputMethodService : InputMethodService() {
     private fun updateSuggestions(prefix: String) {
         suggestionContainer.removeAllViews()
 
-        val langSelectorBtn = Button(this).apply {
-            text = "🌐 $currentLanguage ▾"
+        // Pano (Clipboard) Butonu
+        val pasteBtn = Button(this).apply {
+            text = "📋 Yapıştır"
             setTextColor(Color.BLACK)
             background = createButtonDrawable(isSelected = true)
             textSize = 11f
             isAllCaps = false
             setPadding(12, 0, 12, 0)
-            setOnClickListener {
-                toggleLanguageMenu()
-            }
+            setOnClickListener { pasteFromClipboard() }
         }
-        suggestionContainer.addView(langSelectorBtn)
+        suggestionContainer.addView(pasteBtn)
 
-        if (isLanguageMenuOpen) {
-            val languages = suggestionEngine.getLanguages()
-            languages.forEach { lang ->
-                val btn = Button(this).apply {
-                    text = lang
-                    setTextColor(if (lang == currentLanguage) Color.BLACK else Color.WHITE)
-                    background = createButtonDrawable(isSelected = (lang == currentLanguage))
-                    textSize = 11f
-                    isAllCaps = false
-                    setOnClickListener {
-                        currentLanguage = lang
-                        isLanguageMenuOpen = false
-                        updateSuggestions(currentWord)
-                    }
-                }
-                suggestionContainer.addView(btn)
-            }
-        } else {
-            val suggestions = suggestionEngine.getSuggestions(currentLanguage, prefix, 15)
-            suggestions.forEach { suggestion ->
-                val btn = Button(this).apply {
-                    text = suggestion.text
-                    setTextColor(Color.WHITE)
-                    background = createButtonDrawable(isSelected = false)
-                    textSize = 11f
-                    isAllCaps = false
-                    maxLines = 1
-                    ellipsize = TextUtils.TruncateAt.END
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    ).apply { setMargins(4, 4, 4, 4) }
+        val currentLang = getSelectedLanguage()
+        val suggestions = suggestionEngine.getSuggestions(currentLang, prefix, 15)
+        
+        suggestions.forEach { suggestion ->
+            val btn = Button(this).apply {
+                text = suggestion.text
+                setTextColor(Color.WHITE)
+                background = createButtonDrawable(isSelected = false)
+                textSize = 11f
+                isAllCaps = false
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply { setMargins(4, 4, 4, 4) }
 
-                    setOnClickListener { applySuggestion(suggestion.text) }
-                }
-                suggestionContainer.addView(btn)
+                setOnClickListener { applySuggestion(suggestion.text) }
             }
+            suggestionContainer.addView(btn)
         }
     }
 
-    private fun toggleLanguageMenu() {
-        isLanguageMenuOpen = !isLanguageMenuOpen
-        updateSuggestions(currentWord)
+    private fun pasteFromClipboard() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        if (clipboard.hasPrimaryClip()) {
+            val clipData = clipboard.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                val pasteText = clipData.getItemAt(0).coerceToText(this).toString()
+                currentInputConnection?.commitText(pasteText, 1)
+                updateCurrentWord()
+                return
+            }
+        }
+        Toast.makeText(this, "Pano boş!", Toast.LENGTH_SHORT).show()
     }
 
     private fun applySuggestion(suggestionText: String) {
