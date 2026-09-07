@@ -3,13 +3,12 @@ package com.codeboard.keyboard
 import android.content.Context
 import android.content.SharedPreferences
 import android.inputmethodservice.InputMethodService
+import android.graphics.Color
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputConnection
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -23,17 +22,17 @@ import java.net.URL
 
 class CodeBoardInputMethodService : InputMethodService() {
 
-    private lateinit var keyboardView: LinearLayout
-    private lateinit var keyContainer: LinearLayout
-    private lateinit var aiChatContainer: LinearLayout
-    private lateinit var suggestionBar: LinearLayout
+    private var keyboardView: LinearLayout? = null
+    private var keyContainer: LinearLayout? = null
+    private var aiChatContainer: LinearLayout? = null
+    private var suggestionBar: LinearLayout? = null
     
-    private lateinit var etApiKey: EditText
-    private lateinit var etPrompt: EditText
-    private lateinit var tvAiResponse: TextView
-    private lateinit var btnSendAi: Button
-    private lateinit var btnInsertText: Button
-    private lateinit var btnBackToKeyboard: Button
+    private var etApiKey: EditText? = null
+    private var etPrompt: EditText? = null
+    private var tvAiResponse: TextView? = null
+    private var btnSendAi: Button? = null
+    private var btnInsertText: Button? = null
+    private var btnBackToKeyboard: Button? = null
 
     private lateinit var sharedPreferences: SharedPreferences
     private val serviceScope = CoroutineScope(Dispatchers.Main)
@@ -63,38 +62,39 @@ class CodeBoardInputMethodService : InputMethodService() {
     )
 
     override fun onCreateInputView(): View {
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_view, null) as LinearLayout
+        val view = layoutInflater.inflate(R.layout.keyboard_view, null) as LinearLayout
+        keyboardView = view
         sharedPreferences = getSharedPreferences("CodeBoardPrefs", Context.MODE_PRIVATE)
 
-        keyContainer = keyboardView.findViewById(R.id.keyContainer)
-        aiChatContainer = keyboardView.findViewById(R.id.aiChatContainer)
-        suggestionBar = keyboardView.findViewById(R.id.suggestionBar)
+        keyContainer = view.findViewById(R.id.keyContainer)
+        aiChatContainer = view.findViewById(R.id.aiChatContainer)
+        suggestionBar = view.findViewById(R.id.suggestionBar)
         
-        etApiKey = keyboardView.findViewById(R.id.etApiKey)
-        etPrompt = keyboardView.findViewById(R.id.etPrompt)
-        tvAiResponse = keyboardView.findViewById(R.id.tvAiResponse)
-        btnSendAi = keyboardView.findViewById(R.id.btnSendAi)
-        btnInsertText = keyboardView.findViewById(R.id.btnInsertText)
-        btnBackToKeyboard = keyboardView.findViewById(R.id.btnBackToKeyboard)
+        etApiKey = view.findViewById(R.id.etApiKey)
+        etPrompt = view.findViewById(R.id.etPrompt)
+        tvAiResponse = view.findViewById(R.id.tvAiResponse)
+        btnSendAi = view.findViewById(R.id.btnSendAi)
+        btnInsertText = view.findViewById(R.id.btnInsertText)
+        btnBackToKeyboard = view.findViewById(R.id.btnBackToKeyboard)
 
-        etApiKey.setText(sharedPreferences.getString("GEMINI_API_KEY", ""))
+        etApiKey?.setText(sharedPreferences.getString("GEMINI_API_KEY", ""))
 
-        etApiKey.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+        etApiKey?.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                val key = etApiKey.text.toString().trim()
+                val key = etApiKey?.text.toString().trim()
                 sharedPreferences.edit().putString("GEMINI_API_KEY", key).apply()
             }
         }
 
-        btnBackToKeyboard.setOnClickListener {
-            aiChatContainer.visibility = View.GONE
-            keyContainer.visibility = View.VISIBLE
-            suggestionBar.visibility = View.VISIBLE
+        btnBackToKeyboard?.setOnClickListener {
+            aiChatContainer?.visibility = View.GONE
+            keyContainer?.visibility = View.VISIBLE
+            suggestionBar?.visibility = View.VISIBLE
         }
 
-        btnSendAi.setOnClickListener {
-            val prompt = etPrompt.text.toString().trim()
-            val apiKey = etApiKey.text.toString().trim()
+        btnSendAi?.setOnClickListener {
+            val prompt = etPrompt?.text.toString().trim()
+            val apiKey = etApiKey?.text.toString().trim()
 
             if (apiKey.isEmpty()) {
                 Toast.makeText(this, "Lütfen önce Gemini API Key girin!", Toast.LENGTH_SHORT).show()
@@ -105,29 +105,30 @@ class CodeBoardInputMethodService : InputMethodService() {
                 return@setOnClickListener
             }
 
-            tvAiResponse.text = "Yapay zeka düşünüyor..."
+            tvAiResponse?.text = "Yapay zeka düşünüyor..."
             callGeminiApi(apiKey, prompt)
         }
 
-        btnInsertText.setOnClickListener {
-            val responseText = tvAiResponse.text.toString()
+        btnInsertText?.setOnClickListener {
+            val responseText = tvAiResponse?.text.toString()
             if (responseText.isNotEmpty() && responseText != "Yapay zeka düşünüyor...") {
                 currentInputConnection?.commitText(responseText, 1)
-                aiChatContainer.visibility = View.GONE
-                keyContainer.visibility = View.VISIBLE
-                suggestionBar.visibility = View.VISIBLE
-                etPrompt.setText("")
-                tvAiResponse.text = ""
+                aiChatContainer?.visibility = View.GONE
+                keyContainer?.visibility = View.VISIBLE
+                suggestionBar?.visibility = View.VISIBLE
+                etPrompt?.setText("")
+                tvAiResponse?.text = ""
             }
         }
 
         renderKeyboardLayout()
         updateSuggestions("")
-        return keyboardView
+        return view
     }
 
     private fun renderKeyboardLayout() {
-        keyContainer.removeAllViews()
+        val container = keyContainer ?: return
+        container.removeAllViews()
         val rows = if (isSymbolMode) symbolRows else qwertyRows
 
         for (rowKeys in rows) {
@@ -154,7 +155,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 }
                 rowLayout.addView(button)
             }
-            keyContainer.addView(rowLayout)
+            container.addView(rowLayout)
         }
     }
 
@@ -189,9 +190,9 @@ class CodeBoardInputMethodService : InputMethodService() {
                 updateSuggestions("")
             }
             "AI" -> {
-                keyContainer.visibility = View.GONE
-                suggestionBar.visibility = View.GONE
-                aiChatContainer.visibility = View.VISIBLE
+                keyContainer?.visibility = View.GONE
+                suggestionBar?.visibility = View.GONE
+                aiChatContainer?.visibility = View.VISIBLE
             }
             else -> {
                 val textToCommit = if (!isSymbolMode && isShifted) key.uppercase() else key
@@ -219,7 +220,8 @@ class CodeBoardInputMethodService : InputMethodService() {
     }
 
     private fun updateSuggestions(prefix: String) {
-        suggestionBar.removeAllViews()
+        val bar = suggestionBar ?: return
+        bar.removeAllViews()
         
         val matches = if (prefix.isEmpty()) {
             listOf("merhaba", "selam", "harika", "tamam")
@@ -232,7 +234,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                 text = word
                 setPadding(24, 12, 24, 12)
                 textSize = 14f
-                setTextColor(resources.getColor(android.R.color.darker_gray, null))
+                setTextColor(Color.DKGRAY) // Güvenli renk kullanımı (Çökmeyi önler)
                 setOnClickListener {
                     val ic = currentInputConnection
                     if (ic != null && currentWord.isNotEmpty()) {
@@ -243,7 +245,7 @@ class CodeBoardInputMethodService : InputMethodService() {
                     }
                 }
             }
-            suggestionBar.addView(tv)
+            bar.addView(tv)
         }
     }
 
@@ -284,14 +286,14 @@ class CodeBoardInputMethodService : InputMethodService() {
                         val parts = content.getJSONArray("parts")
                         val text = parts.getJSONObject(0).getString("text")
 
-                        tvAiResponse.text = text.trim()
+                        tvAiResponse?.text = text.trim()
                     } else {
-                        tvAiResponse.text = "Hata ($responseCode): $responseString"
+                        tvAiResponse?.text = "Hata ($responseCode): $responseString"
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    tvAiResponse.text = "Bağlantı Hatası: ${e.localizedMessage}"
+                    tvAiResponse?.text = "Bağlantı Hatası: ${e.localizedMessage}"
                 }
             }
         }
@@ -299,9 +301,9 @@ class CodeBoardInputMethodService : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        aiChatContainer.visibility = View.GONE
-        keyContainer.visibility = View.VISIBLE
-        suggestionBar.visibility = View.VISIBLE
+        aiChatContainer?.visibility = View.GONE
+        keyContainer?.visibility = View.VISIBLE
+        suggestionBar?.visibility = View.VISIBLE
         updateSuggestions("")
     }
 }
