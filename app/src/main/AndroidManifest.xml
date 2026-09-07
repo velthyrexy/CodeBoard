@@ -7,10 +7,19 @@
         android:label="CodeBoard"
         android:roundIcon="@android:drawable/sym_def_app_icon"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <service
-            android:name=".KeyboardService"
+            android:name=".keyboard.CodeBoardInputMethodService"
             android:label="CodeBoard Keyboard"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:exported="true">
