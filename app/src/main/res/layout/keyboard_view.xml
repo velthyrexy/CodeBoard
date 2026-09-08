@@ -1,30 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="#050505"
-    android:padding="6dp">
+    android:paddingStart="5dp"
+    android:paddingEnd="5dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="4dp">
 
-    <!-- Öneri Çubuğu (Suggestions) -->
-    <HorizontalScrollView
+    <!-- CODE SUGGESTION BAR -->
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="38dp"
-        android:scrollbars="none"
-        android:layout_marginBottom="6dp">
+        android:layout_height="46dp"
+        android:orientation="vertical"
+        android:background="#050505">
 
-        <LinearLayout
-            android:id="@+id/suggestion_container"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
+            android:scrollbars="none"
+            android:fillViewport="true">
 
-    <!-- Klavye Tuş Konteynırı -->
+            <LinearLayout
+                android:id="@+id/suggestion_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <!-- YELLOW SEPARATOR -->
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginBottom="4dp"
+        android:background="#FFD700" />
+
+    <!-- KEYBOARD -->
+
     <LinearLayout
         android:id="@+id/keys_container"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:orientation="vertical" />
+        android:layout_height="218dp"
+        android:orientation="vertical"
+        android:clipToPadding="false" />
 
 </LinearLayout>
