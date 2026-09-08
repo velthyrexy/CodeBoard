@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.LinearLayout
@@ -39,6 +40,12 @@ class CodeBoardInputMethodService : InputMethodService() {
                 deleteHandler.postDelayed(this, 50)
             }
         }
+    }
+
+    // Sistem gezinti çubuğunu (Navigation Bar) siyah yapar ve alt beyazlığı çözer
+    override fun onConfigureWindow(win: Window, isInputViewShown: Boolean, isCandidateViewShown: Boolean) {
+        super.onConfigureWindow(win, isInputViewShown, isCandidateViewShown)
+        win.navigationBarColor = Color.parseColor("#050505")
     }
 
     override fun onCreateInputView(): View {
